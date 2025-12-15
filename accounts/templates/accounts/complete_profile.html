@@ -1,0 +1,33 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complete Your Profile</title>
+    <link rel="stylesheet" href="{% static 'css/onboarding.css' %}">
+</head>
+<body>
+
+    <div class="glass-card">
+        <h2 class="onboarding-title">Almost There!</h2>
+        <p class="onboarding-subtitle">Please provide your personal details to finalize your account setup.</p>
+
+        <form method="post">
+            {% csrf_token %}
+            
+            <label for="id_first_name">First Name</label>
+            <input type="text" name="first_name" id="id_first_name" required placeholder="Alexander">
+
+            <label for="id_last_name">Last Name</label>
+            <input type="text" name="last_name" id="id_last_name" required placeholder="Hamilton">
+
+            <label for="id_email">Email Address</label>
+            <input type="email" name="email" id="id_email" required placeholder="alex@university.edu">
+
+            <button type="submit" class="btn-primary">Complete Setup</button>
+        </form>
+    </div>
+
+</body>
+</html>
