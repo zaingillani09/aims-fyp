@@ -1,31 +1,35 @@
-# AIMS Faculty Portal (Academic Information Management System)
+# Academic Information Management System (AIMS) - Version 2 🚀
 
-AIMS is a centralized administrative workflow and management portal built using Django. The system digitizes academic administration, enforcing strict Role-Based Access Control (RBAC) specifically tailored for hierarchical university operations.
+Welcome to **Version 2** of the AIMS Final Year Project! 
 
-## 🚀 Current Accomplishments (V1 MVP)
-The initial structure of the AIMS portal has been successfully implemented and deployed to a PostgreSQL backend. Key accomplishments include:
+The transition from V1's foundation introduces a state-of-the-art **Glassmorphic Sub-Portal Architecture**, intelligently routing administrative actors away from archaic backend panels and directly into highly responsive, custom-styled dashboards.
 
-- **Strict Hierarchical RBAC:** Complex user definitions ensuring security and data isolation across various hierarchical tiers:
-  - `Teacher`
-  - `HOD` (Head of Department)
-  - `Dean`
-  - `Rector`
-  - `Sysadmin`
-- **Issue Workflow Pipeline:** A fully functional, immutable decision-making pipeline where requests and issues are escalated tier-by-tier with complete digital trails and uneditable recorded notes.
-- **Dynamic Onboarding:** Secure first-login flows requiring password resets and forced profile population with modern glassmorphic aesthetics.
-- **Relational Integrity:** Strong Many-to-Many mappings accurately linking Users to primary and adjunct Departments and Faculties.
+## 🌟 Key Features of Version 2
 
-## 🎯 Future Goals & Roadmap
-As we push towards the final iteration of the product, the portal will evolve into a comprehensive administrative hub. The upcoming modules include:
+### 1. Isolated Teacher Dashboard Portal
+- Users with the `TEACHER` role are now logically segregated into a beautiful frontend portal `/portal/`. 
+- **Active Issue Tracking:** Teachers can submit issues, draft them, route them efficiently to proper departments matching their assignments, and safely monitor the resolution logic from HODs and Deans entirely in a read-only viewer logic flow securely isolated from data-alteration tampering.
+- **Meeting Module Integration:** Teachers can seamlessly jump into the Meeting schedule to visually identify attached Agenda Issues, view Organizer logistics, and download securely uploaded `Meeting Minutes` PDF attachments natively.
 
-### 1. Advanced Meeting Scheduler
-- A dedicated scheduling engine specifically for formal academic committees:
-  - **BOF** (Board of Faculty)
-  - **BOS** (Board of Studies)
-  - **Dean's Committee**
+### 2. Live Global Notification Engine
+- Fully automated `pre_save` standard interceptors that hook into native framework structures to instantly track and flag data deltas dynamically.
+- When an issue receives an official Decision from Leadership, or when a Dean uploads minutes to a finalized Meeting, a brand new `Notification` is quietly created and immediately propagated to the Teacher’s UI Bell indicator.
 
-### 2. Automated Notification System
-- Real-time event triggers to alert and RSVP concerned members about their specific upcoming scheduled meetings.
+### 3. Glassmorphism UI Identity
+- Strict adherence to premium styling aesthetics featuring a deep indigo/violet gradient logic.
+- Translucent backdrop filters overlaid with active hovering responses to create depth.
 
-### 3. Native Meeting Minutes Module
-- A rigid record-keeping module to digitally log, archive, and disseminate Meeting Minutes. This ensures complete transparency and historical tracking of every formal decision that takes place within the institution.
+## 🛠 Tech Stack
+- **Backend:** Python + Django 6.0
+- **Database:** PostgreSQL (Azure server structure)
+- **Frontend Design:** Vanilla HTML + Global Component CSS (Glassmorphism Identity)
+
+## 📦 Setting Up Environment
+If deploying locally or pulling V2 for the first time natively:
+1. Initialize the virtual environment natively inside the root directory.
+2. `pip install djangorestframework psycopg2-binary`
+3. Execute `python manage.py runserver`
+4. Jump into `http://127.0.0.1:8000/login/`
+
+## 🔮 Roadmap (Moving Towards V3)
+Our goal for the upcoming iterations moves progressively up the hierarchy ladder! With the bottom floor entirely stabilized and automated, we will look to begin pulling the `HOD` and `DEAN` level users directly into their proprietary Glassmorphic tracking instances to construct the first fully cohesive interface block entirely detached from `/admin/`.
