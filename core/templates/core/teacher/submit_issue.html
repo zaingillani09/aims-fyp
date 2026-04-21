@@ -1,0 +1,40 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<h1 class="page-title">Submit a New Issue</h1>
+
+<div class="glass-panel" style="max-width: 600px;">
+    <p style="color:#94a3b8; font-weight:300; margin-top:0;">
+        Fill out the details below to submit an issue to your department for review.
+    </p>
+
+    <form method="post" style="margin-top:25px;">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label for="{{ form.title.id_for_label }}">Issue Title</label>
+            {{ form.title }}
+            {% if form.title.errors %}<div style="color:#ef4444; font-size:0.8rem; margin-top:5px;">{{ form.title.errors.0 }}</div>{% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.department.id_for_label }}">Department</label>
+            {{ form.department }}
+            {% if form.department.errors %}<div style="color:#ef4444; font-size:0.8rem; margin-top:5px;">{{ form.department.errors.0 }}</div>{% endif %}
+            <small style="color:#64748b; font-size:0.8rem;">Select the relevant department to route this issue to.</small>
+        </div>
+        
+        <div class="form-group">
+            <label for="{{ form.description.id_for_label }}">Description</label>
+            {{ form.description }}
+            {% if form.description.errors %}<div style="color:#ef4444; font-size:0.8rem; margin-top:5px;">{{ form.description.errors.0 }}</div>{% endif %}
+        </div>
+
+        <div style="margin-top: 30px; display:flex; gap:15px; align-items:center;">
+            <button type="submit" name="action" value="submit" class="btn">Submit to HOD</button>
+            <button type="submit" name="action" value="draft" class="btn" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);">Save as Draft</button>
+            <a href="{% url 'teacher_issues' %}" style="color:#94a3b8; text-decoration:none; font-size:0.9rem; margin-left:10px;">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -10,7 +10,7 @@ def first_login_password_change(request):
 
     # If user already changed password, skip
     if not user.must_change_password:
-        return redirect("/admin/")  # temporary redirect for now
+        return redirect("portal_router")  # temporary redirect for now
 
     if request.method == "POST":
         form = PasswordChangeForm(user, request.POST)
@@ -21,7 +21,7 @@ def first_login_password_change(request):
             user.must_change_password = False
             user.save()
 
-            return redirect("/admin/")
+            return redirect("portal_router")
     else:
         form = PasswordChangeForm(user)
 
@@ -33,7 +33,7 @@ def complete_profile(request):
     user = request.user
 
     if user.profile_completed:
-        return redirect("/admin/")
+        return redirect("portal_router")
 
     if request.method == "POST":
         # Only update the fields the user is allowed to change
@@ -47,6 +47,6 @@ def complete_profile(request):
         user.profile_completed = True
         user.save()
 
-        return redirect("/admin/")
+        return redirect("portal_router")
 
     return render(request, "accounts/complete_profile.html")

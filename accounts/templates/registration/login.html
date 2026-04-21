@@ -1,0 +1,43 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIMS Portal - Sign In</title>
+    <link rel="stylesheet" href="{% static 'css/onboarding.css' %}">
+</head>
+<body>
+
+    <div class="glass-card">
+        <h2 class="onboarding-title">Welcome Back</h2>
+        <p class="onboarding-subtitle">Sign in to your AIMS account to continue.</p>
+
+        <form method="post">
+            {% csrf_token %}
+            
+            <div style="margin-bottom: 6px;">
+                <label for="id_username">Username</label>
+            </div>
+            {{ form.username }}
+            
+            <div style="margin-bottom: 6px; margin-top: 15px;">
+                <label for="id_password">Password</label>
+            </div>
+            {{ form.password }}
+
+            {% if form.errors %}
+                <ul class="errorlist" style="margin-top: 15px;">
+                    <li>Your username and password didn't match. Please try again.</li>
+                </ul>
+            {% endif %}
+
+            <button type="submit" class="btn-primary" style="margin-top: 25px;">Sign In</button>
+            
+            <!-- Standard Django redirect mechanism -->
+            <input type="hidden" name="next" value="{{ next|default:'/portal/' }}">
+        </form>
+    </div>
+
+</body>
+</html>

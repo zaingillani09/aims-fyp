@@ -1,0 +1,88 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <h1 class="page-title" style="margin: 0;">Issue Details</h1>
+    <span class="badge" style="background: rgba(255,255,255,0.15); color:white; font-size: 1rem; padding: 8px 16px;">
+        {{ issue.get_status_display }}
+    </span>
+</div>
+
+<div class="glass-panel" style="max-width: 600px;">
+    {% if editable %}
+        <p style="color:#facc15; font-weight:400; margin-top:0; margin-bottom:20px;">
+            This issue is still a draft and can be edited before final submission.
+        </p>
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label for="{{ form.title.id_for_label }}">Issue Title</label>
+                {{ form.title }}
+                {% if form.title.errors %}<div style="color:#ef4444; font-size:0.8rem; margin-top:5px;">{{ form.title.errors.0 }}</div>{% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.department.id_for_label }}">Department</label>
+                {{ form.department }}
+                {% if form.department.errors %}<div style="color:#ef4444; font-size:0.8rem; margin-top:5px;">{{ form.department.errors.0 }}</div>{% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.description.id_for_label }}">Description</label>
+                {{ form.description }}
+                {% if form.description.errors %}<div style="color:#ef4444; font-size:0.8rem; margin-top:5px;">{{ form.description.errors.0 }}</div>{% endif %}
+            </div>
+
+            <div style="margin-top: 30px; display:flex; gap:15px; align-items:center;">
+                <button type="submit" name="action" value="submit" class="btn">Submit to HOD</button>
+                <button type="submit" name="action" value="draft" class="btn" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);">Update Draft</button>
+                <a href="{% url 'teacher_issues' %}" style="color:#94a3b8; text-decoration:none; font-size:0.9rem; margin-left:10px;">Back</a>
+            </div>
+        </form>
+    {% else %}
+        <div class="form-group">
+            <label>Issue Title</label>
+            <div class="form-control" style="background: rgba(255,255,255,0.02); color: #94a3b8;">{{ issue.title }}</div>
+        </div>
+
+        <div class="form-group">
+            <label>Department</label>
+            <div class="form-control" style="background: rgba(255,255,255,0.02); color: #94a3b8;">{{ issue.department }}</div>
+        </div>
+        
+        <div class="form-group">
+            <label>Description</label>
+            <div class="form-control" style="background: rgba(255,255,255,0.02); color: #94a3b8; min-height: 100px; padding: 12px 16px;">{{ issue.description|linebreaksbr }}</div>
+        </div>
+        
+        {% if issue.hod_notes or issue.dean_notes or issue.rector_notes %}
+        <div style="margin-top:30px; padding-top:20px; border-top:1px solid rgba(255,255,255,0.1);">
+            <h3 style="color:white; margin-top:0;">Official Notes</h3>
+            {% if issue.hod_notes %}
+                <div style="margin-bottom:15px;">
+                    <label style="color:#cbd5e1; font-weight:500; display:block; font-size:0.9rem;">HOD Decision Notes</label>
+                    <p style="color:#94a3b8; margin:5px 0 0 0; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 6px;">{{ issue.hod_notes }}</p>
+                </div>
+            {% endif %}
+            {% if issue.dean_notes %}
+                <div style="margin-bottom:15px;">
+                    <label style="color:#cbd5e1; font-weight:500; display:block; font-size:0.9rem;">Dean Decision Notes</label>
+                    <p style="color:#94a3b8; margin:5px 0 0 0; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 6px;">{{ issue.dean_notes }}</p>
+                </div>
+            {% endif %}
+            {% if issue.rector_notes %}
+                <div>
+                    <label style="color:#cbd5e1; font-weight:500; display:block; font-size:0.9rem;">Final Rector Notes</label>
+                    <p style="color:#94a3b8; margin:5px 0 0 0; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 6px;">{{ issue.rector_notes }}</p>
+                </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <div style="margin-top: 30px;">
+            <a href="{% url 'teacher_issues' %}" class="btn" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);">Back to List</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

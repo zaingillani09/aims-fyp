@@ -1,0 +1,87 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIMS Portal</title>
+    <link rel="stylesheet" href="{% static 'css/portal.css' %}">
+</head>
+<body>
+
+    <!-- Sidebar -->
+    <div class="portal-sidebar">
+        <div class="portal-logo">AIMS Portal</div>
+        
+        <a href="{% url 'teacher_dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'teacher_dashboard' %}active{% endif %}">
+            Dashboard
+        </a>
+        <a href="{% url 'teacher_issues' %}" class="nav-link {% if 'issues' in request.resolver_match.url_name %}active{% endif %}">
+            My Issues
+        </a>
+        <a href="{% url 'teacher_meetings' %}" class="nav-link {% if request.resolver_match.url_name == 'teacher_meetings' %}active{% endif %}">
+            Meetings Schedule
+        </a>
+
+        <!-- We'll assume Django auth logout view exists -->
+        <form method="post" action="{% url 'logout' %}" style="margin-top:auto;">
+            {% csrf_token %}
+            <button type="submit" class="nav-link logout" style="width:100%; background:none; border:none; cursor:pointer; text-align:left; font-size:inherit;">
+                Log Out
+            </button>
+        </form>
+    </div>
+
+    <!-- Main Content -->
+    <div class="portal-content">
+        <div class="portal-header">
+            <div class="notification-bell" id="bellIcon">
+                🔔
+                {% if unread_notifications_count > 0 %}
+                    <span class="notification-badge">{{ unread_notifications_count }}</span>
+                {% endif %}
+                
+                <div class="notification-dropdown" id="notifDropdown">
+                    <h4 style="margin: 0; padding: 15px; color: white; border-bottom: 1px solid rgba(255,255,255,0.1);">Notifications</h4>
+                    {% if latest_notifications %}
+                        {% for notif in latest_notifications %}
+                            <a href="{% url 'mark_notification_read' notif.pk %}" class="notification-item">
+                                {{ notif.message }}
+                                <div style="font-size: 0.7rem; color: #64748b; margin-top: 5px;">{{ notif.created_at|timesince }} ago</div>
+                            </a>
+                        {% endfor %}
+                    {% else %}
+                        <div class="notification-empty">No new notifications</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <script>
+            document.getElementById('bellIcon').addEventListener('click', function(e) {
+                document.getElementById('notifDropdown').classList.toggle('active');
+            });
+            document.getElementById('notifDropdown').addEventListener('click', function(e) {
+                e.stopPropagation();
+            });
+            document.addEventListener('click', function(e) {
+                if(!document.getElementById('bellIcon').contains(e.target)) {
+                    document.getElementById('notifDropdown').classList.remove('active');
+                }
+            });
+        </script>
+
+        {% if messages %}
+            <ul class="messages">
+                {% for message in messages %}
+                <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        {% block content %}
+        {% endblock %}
+    </div>
+
+</body>
+</html>

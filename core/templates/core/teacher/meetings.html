@@ -1,0 +1,44 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<h1 class="page-title">Meeting Schedule</h1>
+
+<div class="glass-panel" style="padding: 0; overflow: hidden;">
+    {% if meetings %}
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Meeting Type</th>
+                <th>Organizer</th>
+                <th>Date & Time</th>
+                <th>Location</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for meeting in meetings %}
+            <tr>
+                <td style="font-weight: 500;">
+                    <a href="{% url 'teacher_meeting_detail' meeting.pk %}" style="color: #60a5fa; text-decoration: none; transition: color 0.2s;">
+                        {{ meeting.get_meeting_type_display }}
+                    </a>
+                </td>
+                <td style="color:#cbd5e1;">{{ meeting.organizer.first_name }} {{ meeting.organizer.last_name }}</td>
+                <td style="color:#cbd5e1;">{{ meeting.date|date:"M d, Y" }} at {{ meeting.time|time:"H:i" }}</td>
+                <td style="color:#cbd5e1;">{{ meeting.location|default:"TBA" }}</td>
+                <td>
+                    <span class="badge" style="background: rgba(255,255,255,0.15); color:white;">
+                        {{ meeting.get_status_display }}
+                    </span>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div style="padding: 40px; text-align: center; color: #94a3b8;">
+        <p>You have no upcoming meetings dynamically scheduled.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

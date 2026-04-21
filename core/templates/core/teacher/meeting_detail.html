@@ -1,0 +1,71 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <h1 class="page-title" style="margin: 0;">Meeting Details</h1>
+    <span class="badge" style="background: rgba(255,255,255,0.15); color:white; font-size: 1rem; padding: 8px 16px;">
+        {{ meeting.get_status_display }}
+    </span>
+</div>
+
+<div class="glass-panel" style="max-width: 800px;">
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px;">
+        <div>
+            <label style="color:#cbd5e1; font-weight:500; display:block; font-size:0.9rem;">Meeting Type</label>
+            <div style="background: rgba(255,255,255,0.02); color: white; padding: 12px; border-radius: 8px; margin-top: 5px;">
+                {{ meeting.get_meeting_type_display }}
+                {% if meeting.department %} ({{ meeting.department }}){% endif %}
+                {% if meeting.faculty %} ({{ meeting.faculty }}){% endif %}
+            </div>
+        </div>
+        <div>
+            <label style="color:#cbd5e1; font-weight:500; display:block; font-size:0.9rem;">Organizer</label>
+            <div style="background: rgba(255,255,255,0.02); color: white; padding: 12px; border-radius: 8px; margin-top: 5px;">
+                {{ meeting.organizer.get_full_name|default:meeting.organizer.username }}
+            </div>
+        </div>
+        <div>
+            <label style="color:#cbd5e1; font-weight:500; display:block; font-size:0.9rem;">Date & Time</label>
+            <div style="background: rgba(255,255,255,0.02); color: white; padding: 12px; border-radius: 8px; margin-top: 5px;">
+                {{ meeting.date|date:"M d, Y" }} at {{ meeting.time|time:"H:i" }}
+            </div>
+        </div>
+        <div>
+            <label style="color:#cbd5e1; font-weight:500; display:block; font-size:0.9rem;">Location</label>
+            <div style="background: rgba(255,255,255,0.02); color: white; padding: 12px; border-radius: 8px; margin-top: 5px;">
+                {{ meeting.location|default:"TBA" }}
+            </div>
+        </div>
+    </div>
+
+    {% if meeting.agenda_issues.exists %}
+    <div style="margin-top: 30px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px;">
+        <h3 style="color:white; margin-top:0; margin-bottom: 15px;">Agenda Items</h3>
+        <ul style="list-style: none; padding: 0; margin: 0;">
+            {% for issue in meeting.agenda_issues.all %}
+            <li style="background: rgba(0,0,0,0.2); padding: 12px 16px; border-radius: 8px; margin-bottom: 10px; color: #e2e8f0; border-left: 3px solid #8b5cf6;">
+                <strong style="color: white; font-size: 1.05rem;">{{ issue.title }}</strong><br>
+                <div style="margin-top: 5px;">
+                    <span style="font-size: 0.85rem; color: #94a3b8; display: block; margin-bottom: 5px;">Submitted by: {{ issue.created_by.get_full_name|default:issue.created_by.username }}</span>
+                    <span style="font-size: 0.9rem; color: #cbd5e1;">{{ issue.description|truncatewords:20 }}</span>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    {% if meeting.minutes_attachment %}
+    <div style="margin-top: 30px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px;">
+        <h3 style="color:white; margin-top:0; margin-bottom: 15px;">Attachments</h3>
+        <a href="{{ meeting.minutes_attachment.url }}" target="_blank" class="btn" style="background: rgba(59, 130, 246, 0.2); border: 1px solid #3b82f6; color: #93c5fd; font-weight: 600;">
+            📎 Download Meeting Minutes
+        </a>
+    </div>
+    {% endif %}
+
+    <div style="margin-top: 40px;">
+        <a href="{% url 'teacher_meetings' %}" class="btn" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);">Back to Schedule</a>
+    </div>
+</div>
+{% endblock %}

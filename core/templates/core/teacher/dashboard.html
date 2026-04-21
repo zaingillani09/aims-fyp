@@ -1,0 +1,26 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<h1 class="page-title">Welcome back, {{ request.user.first_name|default:request.user.username }}</h1>
+
+<div class="stats-grid">
+    <div class="glass-panel stat-card">
+        <h3>{{ total_issues }}</h3>
+        <p>Issues Submitted</p>
+    </div>
+    <div class="glass-panel stat-card">
+        <h3>{{ upcoming_meetings }}</h3>
+        <p>Upcoming Meetings</p>
+    </div>
+</div>
+
+<div class="glass-panel">
+    <h2 style="margin-top:0; color:white;">Quick Actions</h2>
+    <p style="color:#94a3b8; font-weight:300;">What would you like to do today?</p>
+    
+    <div style="margin-top: 20px; display: flex; gap: 15px;">
+        <a href="{% url 'teacher_submit_issue' %}" class="btn">Submit New Issue</a>
+        <a href="{% url 'teacher_meetings' %}" class="btn" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);">View Schedule</a>
+    </div>
+</div>
+{% endblock %}
