@@ -1,0 +1,1533 @@
+[
+{
+    "model": "auth.group",
+    "fields": {
+        "name": "TEACHER",
+        "permissions": [
+            [
+                "add_issue",
+                "issues",
+                "issue"
+            ],
+            [
+                "change_issue",
+                "issues",
+                "issue"
+            ],
+            [
+                "delete_issue",
+                "issues",
+                "issue"
+            ],
+            [
+                "view_issue",
+                "issues",
+                "issue"
+            ],
+            [
+                "view_issuedecision",
+                "issues",
+                "issuedecision"
+            ]
+        ]
+    }
+},
+{
+    "model": "auth.group",
+    "fields": {
+        "name": "HOD",
+        "permissions": [
+            [
+                "change_issue",
+                "issues",
+                "issue"
+            ],
+            [
+                "view_issue",
+                "issues",
+                "issue"
+            ],
+            [
+                "add_issuedecision",
+                "issues",
+                "issuedecision"
+            ],
+            [
+                "change_issuedecision",
+                "issues",
+                "issuedecision"
+            ],
+            [
+                "view_issuedecision",
+                "issues",
+                "issuedecision"
+            ]
+        ]
+    }
+},
+{
+    "model": "auth.group",
+    "fields": {
+        "name": "DEAN",
+        "permissions": [
+            [
+                "view_user",
+                "accounts",
+                "user"
+            ],
+            [
+                "view_department",
+                "core",
+                "department"
+            ],
+            [
+                "change_issue",
+                "issues",
+                "issue"
+            ],
+            [
+                "view_issue",
+                "issues",
+                "issue"
+            ],
+            [
+                "add_issuedecision",
+                "issues",
+                "issuedecision"
+            ],
+            [
+                "change_issuedecision",
+                "issues",
+                "issuedecision"
+            ],
+            [
+                "view_issuedecision",
+                "issues",
+                "issuedecision"
+            ]
+        ]
+    }
+},
+{
+    "model": "auth.group",
+    "fields": {
+        "name": "RECTOR",
+        "permissions": [
+            [
+                "view_user",
+                "accounts",
+                "user"
+            ],
+            [
+                "view_department",
+                "core",
+                "department"
+            ],
+            [
+                "view_faculty",
+                "core",
+                "faculty"
+            ],
+            [
+                "change_issue",
+                "issues",
+                "issue"
+            ],
+            [
+                "view_issue",
+                "issues",
+                "issue"
+            ],
+            [
+                "add_issuedecision",
+                "issues",
+                "issuedecision"
+            ],
+            [
+                "view_issuedecision",
+                "issues",
+                "issuedecision"
+            ]
+        ]
+    }
+},
+{
+    "model": "auth.group",
+    "fields": {
+        "name": "SYSADMIN",
+        "permissions": [
+            [
+                "add_user",
+                "accounts",
+                "user"
+            ],
+            [
+                "change_user",
+                "accounts",
+                "user"
+            ],
+            [
+                "delete_user",
+                "accounts",
+                "user"
+            ],
+            [
+                "view_user",
+                "accounts",
+                "user"
+            ],
+            [
+                "add_logentry",
+                "admin",
+                "logentry"
+            ],
+            [
+                "change_logentry",
+                "admin",
+                "logentry"
+            ],
+            [
+                "delete_logentry",
+                "admin",
+                "logentry"
+            ],
+            [
+                "view_logentry",
+                "admin",
+                "logentry"
+            ],
+            [
+                "add_group",
+                "auth",
+                "group"
+            ],
+            [
+                "change_group",
+                "auth",
+                "group"
+            ],
+            [
+                "delete_group",
+                "auth",
+                "group"
+            ],
+            [
+                "view_group",
+                "auth",
+                "group"
+            ],
+            [
+                "add_permission",
+                "auth",
+                "permission"
+            ],
+            [
+                "change_permission",
+                "auth",
+                "permission"
+            ],
+            [
+                "delete_permission",
+                "auth",
+                "permission"
+            ],
+            [
+                "view_permission",
+                "auth",
+                "permission"
+            ],
+            [
+                "add_contenttype",
+                "contenttypes",
+                "contenttype"
+            ],
+            [
+                "change_contenttype",
+                "contenttypes",
+                "contenttype"
+            ],
+            [
+                "delete_contenttype",
+                "contenttypes",
+                "contenttype"
+            ],
+            [
+                "view_contenttype",
+                "contenttypes",
+                "contenttype"
+            ],
+            [
+                "add_department",
+                "core",
+                "department"
+            ],
+            [
+                "change_department",
+                "core",
+                "department"
+            ],
+            [
+                "delete_department",
+                "core",
+                "department"
+            ],
+            [
+                "view_department",
+                "core",
+                "department"
+            ],
+            [
+                "add_faculty",
+                "core",
+                "faculty"
+            ],
+            [
+                "change_faculty",
+                "core",
+                "faculty"
+            ],
+            [
+                "delete_faculty",
+                "core",
+                "faculty"
+            ],
+            [
+                "view_faculty",
+                "core",
+                "faculty"
+            ],
+            [
+                "add_issue",
+                "issues",
+                "issue"
+            ],
+            [
+                "change_issue",
+                "issues",
+                "issue"
+            ],
+            [
+                "delete_issue",
+                "issues",
+                "issue"
+            ],
+            [
+                "view_issue",
+                "issues",
+                "issue"
+            ],
+            [
+                "add_issuedecision",
+                "issues",
+                "issuedecision"
+            ],
+            [
+                "change_issuedecision",
+                "issues",
+                "issuedecision"
+            ],
+            [
+                "delete_issuedecision",
+                "issues",
+                "issuedecision"
+            ],
+            [
+                "view_issuedecision",
+                "issues",
+                "issuedecision"
+            ],
+            [
+                "add_session",
+                "sessions",
+                "session"
+            ],
+            [
+                "change_session",
+                "sessions",
+                "session"
+            ],
+            [
+                "delete_session",
+                "sessions",
+                "session"
+            ],
+            [
+                "view_session",
+                "sessions",
+                "session"
+            ]
+        ]
+    }
+},
+{
+    "model": "accounts.user",
+    "fields": {
+        "password": "pbkdf2_sha256$1200000$ecQQaSe2q8PgUPQAvGttUw$Ijv53zAz/cY0pxNBsnHAON0CTjYV2z+9I+5xExkDEUU=",
+        "last_login": "2026-04-19T09:04:14.486Z",
+        "is_superuser": true,
+        "username": "zaingillani09",
+        "first_name": "Test",
+        "last_name": "PROFILE COMPLETION",
+        "email": "TESTPROFILECOMPLETION@gmail.com",
+        "is_staff": true,
+        "is_active": true,
+        "date_joined": "2026-02-21T21:50:03Z",
+        "must_change_password": false,
+        "profile_completed": true,
+        "role": "SYSADMIN",
+        "primary_department": null,
+        "faculty": null,
+        "groups": [
+            [
+                "SYSADMIN"
+            ]
+        ],
+        "user_permissions": [],
+        "departments": []
+    }
+},
+{
+    "model": "accounts.user",
+    "fields": {
+        "password": "pbkdf2_sha256$1200000$cZpqKPKz9KNPgzgwHOYPGm$asWx/yA38ed3lcwOgcFeSTXXnK7KtE5rrQRwP/JUpz8=",
+        "last_login": "2026-04-22T18:49:30.841Z",
+        "is_superuser": false,
+        "username": "teacher1",
+        "first_name": "Teacher",
+        "last_name": "1",
+        "email": "TestTeacher1@gmail.com",
+        "is_staff": true,
+        "is_active": true,
+        "date_joined": "2026-02-23T05:48:54Z",
+        "must_change_password": false,
+        "profile_completed": true,
+        "role": "TEACHER",
+        "primary_department": 1,
+        "faculty": 1,
+        "groups": [
+            [
+                "TEACHER"
+            ]
+        ],
+        "user_permissions": [],
+        "departments": [
+            1,
+            2
+        ]
+    }
+},
+{
+    "model": "accounts.user",
+    "fields": {
+        "password": "pbkdf2_sha256$1200000$FMbyUr5CpItb4udVWyqvVf$+I5/kCs7Fk6bKorGiVmAM/8XbnJHGfa71+lgjVvzSjY=",
+        "last_login": "2026-04-21T03:22:28.394Z",
+        "is_superuser": false,
+        "username": "HOD1",
+        "first_name": "HOD",
+        "last_name": "1",
+        "email": "TestHOD1@gmail.com",
+        "is_staff": true,
+        "is_active": true,
+        "date_joined": "2026-02-23T05:50:44Z",
+        "must_change_password": false,
+        "profile_completed": true,
+        "role": "HOD",
+        "primary_department": 1,
+        "faculty": 1,
+        "groups": [
+            [
+                "HOD"
+            ]
+        ],
+        "user_permissions": [
+            [
+                "view_issue",
+                "issues",
+                "issue"
+            ],
+            [
+                "add_issuedecision",
+                "issues",
+                "issuedecision"
+            ],
+            [
+                "view_issuedecision",
+                "issues",
+                "issuedecision"
+            ]
+        ],
+        "departments": [
+            1
+        ]
+    }
+},
+{
+    "model": "accounts.user",
+    "fields": {
+        "password": "pbkdf2_sha256$1200000$ZKQlk1HpKVk0hWUZneS12h$QrTZvliWKdi7KduJNeJeuG3pvs5erQqhF6U8SHmPF1Q=",
+        "last_login": "2026-04-20T11:32:12.226Z",
+        "is_superuser": false,
+        "username": "DEAN1",
+        "first_name": "DEAN",
+        "last_name": "ONE",
+        "email": "DEAN@gmail.com",
+        "is_staff": true,
+        "is_active": true,
+        "date_joined": "2026-04-08T16:48:23Z",
+        "must_change_password": false,
+        "profile_completed": true,
+        "role": "DEAN",
+        "primary_department": 1,
+        "faculty": 1,
+        "groups": [
+            [
+                "DEAN"
+            ]
+        ],
+        "user_permissions": [],
+        "departments": [
+            1,
+            2
+        ]
+    }
+},
+{
+    "model": "accounts.user",
+    "fields": {
+        "password": "pbkdf2_sha256$1200000$YhO1LijXIHL7riwB434sEW$WL+iRWEKMHOxrC9QoBM8wyMlHagr01CTVGFOHpmKXis=",
+        "last_login": "2026-04-20T11:33:19.830Z",
+        "is_superuser": false,
+        "username": "RECTOR",
+        "first_name": "Rector",
+        "last_name": "1",
+        "email": "RECTOR@gmail.com",
+        "is_staff": true,
+        "is_active": true,
+        "date_joined": "2026-04-08T22:34:32Z",
+        "must_change_password": false,
+        "profile_completed": true,
+        "role": "RECTOR",
+        "primary_department": null,
+        "faculty": null,
+        "groups": [
+            [
+                "RECTOR"
+            ]
+        ],
+        "user_permissions": [],
+        "departments": []
+    }
+},
+{
+    "model": "accounts.user",
+    "fields": {
+        "password": "pbkdf2_sha256$1200000$8edLc2r3mspR1vTNymbU9H$edpi/s0sWpW+luqysGUozRB8qn5p/F7bme1onmp/feE=",
+        "last_login": "2026-04-09T11:10:05.104Z",
+        "is_superuser": false,
+        "username": "teacher2",
+        "first_name": "teacher",
+        "last_name": "2",
+        "email": "TestTeacher2@gmail.com",
+        "is_staff": true,
+        "is_active": true,
+        "date_joined": "2026-04-09T11:06:14Z",
+        "must_change_password": false,
+        "profile_completed": true,
+        "role": "TEACHER",
+        "primary_department": 1,
+        "faculty": 1,
+        "groups": [
+            [
+                "TEACHER"
+            ]
+        ],
+        "user_permissions": [],
+        "departments": [
+            1
+        ]
+    }
+},
+{
+    "model": "accounts.user",
+    "fields": {
+        "password": "pbkdf2_sha256$1200000$mHo6oZ7PkDpASbu0NLkZCN$LKYQIdM7cHJqvsm2GMyKx2MdRpzE/zmX/saPZJUwS8s=",
+        "last_login": "2026-04-19T11:50:33.358Z",
+        "is_superuser": false,
+        "username": "teacher3",
+        "first_name": "teacher",
+        "last_name": "3",
+        "email": "TestTeacher3@gmail.com",
+        "is_staff": true,
+        "is_active": true,
+        "date_joined": "2026-04-10T15:27:47Z",
+        "must_change_password": false,
+        "profile_completed": true,
+        "role": "TEACHER",
+        "primary_department": 1,
+        "faculty": 1,
+        "groups": [
+            [
+                "TEACHER"
+            ]
+        ],
+        "user_permissions": [],
+        "departments": [
+            1,
+            2
+        ]
+    }
+},
+{
+    "model": "issues.issue",
+    "pk": 5,
+    "fields": {
+        "title": "TEST1",
+        "description": "testing the flow",
+        "created_by": [
+            "teacher1"
+        ],
+        "department": 1,
+        "status": "RETURNED_TO_HOD",
+        "hod_notes": "APPROVED",
+        "dean_notes": "RETURN FOR REVISION",
+        "rector_notes": "",
+        "created_at": "2026-03-31T16:28:16.459Z",
+        "updated_at": "2026-04-08T21:13:39.551Z"
+    }
+},
+{
+    "model": "issues.issue",
+    "pk": 6,
+    "fields": {
+        "title": "TEST2",
+        "description": "testing 2",
+        "created_by": [
+            "teacher1"
+        ],
+        "department": 1,
+        "status": "REJECTED",
+        "hod_notes": "NOT APPROVED",
+        "dean_notes": "",
+        "rector_notes": "",
+        "created_at": "2026-04-02T18:20:36.596Z",
+        "updated_at": "2026-04-03T04:41:24.879Z"
+    }
+},
+{
+    "model": "issues.issue",
+    "pk": 8,
+    "fields": {
+        "title": "TEST3",
+        "description": "REVISION ( REVISED ) > OOKAY",
+        "created_by": [
+            "teacher1"
+        ],
+        "department": 1,
+        "status": "SUBMITTED",
+        "hod_notes": "This is not feasible , returning for revision , STILL",
+        "dean_notes": "",
+        "rector_notes": "",
+        "created_at": "2026-04-03T05:49:03.764Z",
+        "updated_at": "2026-04-08T19:07:27.134Z"
+    }
+},
+{
+    "model": "issues.issue",
+    "pk": 9,
+    "fields": {
+        "title": "Test Issue 4",
+        "description": "TESTING ISSUE FINAL",
+        "created_by": [
+            "teacher1"
+        ],
+        "department": 1,
+        "status": "RETURNED_TO_DEAN",
+        "hod_notes": "APPROVED",
+        "dean_notes": "APPROVED",
+        "rector_notes": "RETURN FOR REVISION",
+        "created_at": "2026-04-08T15:07:26.888Z",
+        "updated_at": "2026-04-08T22:39:56.110Z"
+    }
+},
+{
+    "model": "issues.issue",
+    "pk": 10,
+    "fields": {
+        "title": "Test issue 5",
+        "description": "Testing 5",
+        "created_by": [
+            "teacher1"
+        ],
+        "department": 1,
+        "status": "REJECTED",
+        "hod_notes": "APPROVED",
+        "dean_notes": "NAA NOT RIGHT",
+        "rector_notes": "",
+        "created_at": "2026-04-08T18:52:56.995Z",
+        "updated_at": "2026-04-08T21:27:16.086Z"
+    }
+},
+{
+    "model": "issues.issue",
+    "pk": 11,
+    "fields": {
+        "title": "TEST 6",
+        "description": "TESTING 6",
+        "created_by": [
+            "teacher1"
+        ],
+        "department": 1,
+        "status": "SUBMITTED",
+        "hod_notes": "",
+        "dean_notes": "",
+        "rector_notes": "",
+        "created_at": "2026-04-08T21:28:25.397Z",
+        "updated_at": "2026-04-08T21:28:39.660Z"
+    }
+},
+{
+    "model": "issues.issue",
+    "pk": 12,
+    "fields": {
+        "title": "test 7",
+        "description": "testing 7 time",
+        "created_by": [
+            "teacher3"
+        ],
+        "department": 1,
+        "status": "FINAL_APPROVED",
+        "hod_notes": "Approving test 7",
+        "dean_notes": "Approving test 7",
+        "rector_notes": "Approving Test 7",
+        "created_at": "2026-04-10T16:12:02.924Z",
+        "updated_at": "2026-04-10T16:13:36.935Z"
+    }
+},
+{
+    "model": "issues.issue",
+    "pk": 13,
+    "fields": {
+        "title": "TEST MEETING",
+        "description": "TESTING MEETING MODULE",
+        "created_by": [
+            "teacher1"
+        ],
+        "department": 1,
+        "status": "SUBMITTED",
+        "hod_notes": "",
+        "dean_notes": "",
+        "rector_notes": "",
+        "created_at": "2026-04-19T09:02:56.295Z",
+        "updated_at": "2026-04-19T09:03:13.173Z"
+    }
+},
+{
+    "model": "issues.issue",
+    "pk": 14,
+    "fields": {
+        "title": "TEST 8",
+        "description": "Testing new teacher dashboard",
+        "created_by": [
+            "teacher1"
+        ],
+        "department": 1,
+        "status": "SUBMITTED",
+        "hod_notes": "",
+        "dean_notes": "",
+        "rector_notes": "",
+        "created_at": "2026-04-21T03:03:20.288Z",
+        "updated_at": "2026-04-21T03:05:41.856Z"
+    }
+},
+{
+    "model": "issues.issuedecision",
+    "pk": 3,
+    "fields": {
+        "issue": 5,
+        "decided_by": [
+            "HOD1"
+        ],
+        "decision": "APPROVE",
+        "notes": "APPROVED",
+        "decided_at": "2026-04-01T10:17:13.885Z"
+    }
+},
+{
+    "model": "issues.issuedecision",
+    "pk": 4,
+    "fields": {
+        "issue": 6,
+        "decided_by": [
+            "HOD1"
+        ],
+        "decision": "REJECT",
+        "notes": "NOT APPROVED",
+        "decided_at": "2026-04-03T04:41:24.901Z"
+    }
+},
+{
+    "model": "issues.issuedecision",
+    "pk": 5,
+    "fields": {
+        "issue": 8,
+        "decided_by": [
+            "HOD1"
+        ],
+        "decision": "RETURN",
+        "notes": "This is not feasible , returning for revision , STILL",
+        "decided_at": "2026-04-03T05:54:47.831Z"
+    }
+},
+{
+    "model": "issues.issuedecision",
+    "pk": 6,
+    "fields": {
+        "issue": 9,
+        "decided_by": [
+            "HOD1"
+        ],
+        "decision": "APPROVE",
+        "notes": "APPROVED",
+        "decided_at": "2026-04-08T15:14:16.826Z"
+    }
+},
+{
+    "model": "issues.issuedecision",
+    "pk": 7,
+    "fields": {
+        "issue": 9,
+        "decided_by": [
+            "DEAN1"
+        ],
+        "decision": "APPROVE",
+        "notes": "APPROVED",
+        "decided_at": "2026-04-08T21:09:29.919Z"
+    }
+},
+{
+    "model": "issues.issuedecision",
+    "pk": 8,
+    "fields": {
+        "issue": 5,
+        "decided_by": [
+            "DEAN1"
+        ],
+        "decision": "RETURN",
+        "notes": "RETURN FOR REVISION",
+        "decided_at": "2026-04-08T21:13:39.554Z"
+    }
+},
+{
+    "model": "issues.issuedecision",
+    "pk": 9,
+    "fields": {
+        "issue": 10,
+        "decided_by": [
+            "HOD1"
+        ],
+        "decision": "APPROVE",
+        "notes": "APPROVED",
+        "decided_at": "2026-04-08T21:26:21.797Z"
+    }
+},
+{
+    "model": "issues.issuedecision",
+    "pk": 10,
+    "fields": {
+        "issue": 10,
+        "decided_by": [
+            "DEAN1"
+        ],
+        "decision": "REJECT",
+        "notes": "NAA NOT RIGHT",
+        "decided_at": "2026-04-08T21:27:16.096Z"
+    }
+},
+{
+    "model": "issues.issuedecision",
+    "pk": 11,
+    "fields": {
+        "issue": 9,
+        "decided_by": [
+            "RECTOR"
+        ],
+        "decision": "RETURN",
+        "notes": "RETURN FOR REVISION",
+        "decided_at": "2026-04-08T22:39:56.114Z"
+    }
+},
+{
+    "model": "issues.issuedecision",
+    "pk": 12,
+    "fields": {
+        "issue": 12,
+        "decided_by": [
+            "HOD1"
+        ],
+        "decision": "APPROVE",
+        "notes": "Approving test 7",
+        "decided_at": "2026-04-10T16:12:43.726Z"
+    }
+},
+{
+    "model": "issues.issuedecision",
+    "pk": 13,
+    "fields": {
+        "issue": 12,
+        "decided_by": [
+            "DEAN1"
+        ],
+        "decision": "APPROVE",
+        "notes": "Approving test 7",
+        "decided_at": "2026-04-10T16:13:12.220Z"
+    }
+},
+{
+    "model": "issues.issuedecision",
+    "pk": 14,
+    "fields": {
+        "issue": 12,
+        "decided_by": [
+            "RECTOR"
+        ],
+        "decision": "APPROVE",
+        "notes": "Approving Test 7",
+        "decided_at": "2026-04-10T16:13:36.938Z"
+    }
+},
+{
+    "model": "meetings.meeting",
+    "pk": 1,
+    "fields": {
+        "meeting_type": "BOS",
+        "department": 1,
+        "faculty": 1,
+        "date": "2026-04-19",
+        "time": "00:00:00",
+        "location": "EXAM HALL",
+        "organizer": [
+            "HOD1"
+        ],
+        "minutes_attachment": "",
+        "status": "CANCELLED",
+        "created_at": "2026-04-19T11:49:32.508Z",
+        "updated_at": "2026-04-21T03:16:17.638Z",
+        "attendees": [
+            [
+                "zaingillani09"
+            ],
+            [
+                "teacher1"
+            ],
+            [
+                "HOD1"
+            ],
+            [
+                "DEAN1"
+            ],
+            [
+                "RECTOR"
+            ],
+            [
+                "teacher3"
+            ]
+        ],
+        "agenda_issues": [
+            8,
+            11,
+            13
+        ]
+    }
+},
+{
+    "model": "meetings.meeting",
+    "pk": 2,
+    "fields": {
+        "meeting_type": "BOS",
+        "department": 1,
+        "faculty": 1,
+        "date": "2026-04-19",
+        "time": "17:17:32",
+        "location": "EXAM HALL 2",
+        "organizer": [
+            "HOD1"
+        ],
+        "minutes_attachment": "meeting_minutes/CVFAKE2.jpeg",
+        "status": "CONCLUDED",
+        "created_at": "2026-04-19T12:17:53.312Z",
+        "updated_at": "2026-04-21T03:18:21.530Z",
+        "attendees": [
+            [
+                "zaingillani09"
+            ],
+            [
+                "teacher1"
+            ],
+            [
+                "HOD1"
+            ],
+            [
+                "DEAN1"
+            ],
+            [
+                "RECTOR"
+            ],
+            [
+                "teacher2"
+            ],
+            [
+                "teacher3"
+            ]
+        ],
+        "agenda_issues": [
+            8,
+            11,
+            13
+        ]
+    }
+},
+{
+    "model": "meetings.meeting",
+    "pk": 3,
+    "fields": {
+        "meeting_type": "BOF",
+        "department": null,
+        "faculty": 1,
+        "date": "2026-04-20",
+        "time": "16:32:21",
+        "location": "EXAM HALL 3",
+        "organizer": [
+            "DEAN1"
+        ],
+        "minutes_attachment": "",
+        "status": "SCHEDULED",
+        "created_at": "2026-04-20T11:32:46.104Z",
+        "updated_at": "2026-04-20T11:32:46.104Z",
+        "attendees": [
+            [
+                "teacher2"
+            ],
+            [
+                "HOD1"
+            ],
+            [
+                "DEAN1"
+            ],
+            [
+                "RECTOR"
+            ]
+        ],
+        "agenda_issues": []
+    }
+},
+{
+    "model": "meetings.meeting",
+    "pk": 4,
+    "fields": {
+        "meeting_type": "BOS",
+        "department": 1,
+        "faculty": 1,
+        "date": "2026-04-21",
+        "time": "08:16:24",
+        "location": "EXAM HALL 4",
+        "organizer": [
+            "HOD1"
+        ],
+        "minutes_attachment": "meeting_minutes/CVFAKE3_mwd7xVR.jpeg",
+        "status": "CONCLUDED",
+        "created_at": "2026-04-21T03:17:03.096Z",
+        "updated_at": "2026-04-21T03:22:44.480Z",
+        "attendees": [
+            [
+                "teacher1"
+            ],
+            [
+                "HOD1"
+            ],
+            [
+                "DEAN1"
+            ],
+            [
+                "RECTOR"
+            ]
+        ],
+        "agenda_issues": [
+            13
+        ]
+    }
+},
+{
+    "model": "core.notification",
+    "pk": 1,
+    "fields": {
+        "recipient": [
+            "DEAN1"
+        ],
+        "message": "You have been invited to a Board of Studies",
+        "link": "/portal/meetings/4/",
+        "is_read": false,
+        "created_at": "2026-04-21T03:17:03.102Z"
+    }
+},
+{
+    "model": "core.notification",
+    "pk": 2,
+    "fields": {
+        "recipient": [
+            "RECTOR"
+        ],
+        "message": "You have been invited to a Board of Studies",
+        "link": "/portal/meetings/4/",
+        "is_read": false,
+        "created_at": "2026-04-21T03:17:03.103Z"
+    }
+},
+{
+    "model": "core.notification",
+    "pk": 3,
+    "fields": {
+        "recipient": [
+            "teacher1"
+        ],
+        "message": "You have been invited to a Board of Studies",
+        "link": "/portal/meetings/4/",
+        "is_read": true,
+        "created_at": "2026-04-21T03:17:03.104Z"
+    }
+},
+{
+    "model": "core.notification",
+    "pk": 4,
+    "fields": {
+        "recipient": [
+            "HOD1"
+        ],
+        "message": "You have been invited to a Board of Studies",
+        "link": "/portal/meetings/4/",
+        "is_read": false,
+        "created_at": "2026-04-21T03:17:03.104Z"
+    }
+},
+{
+    "model": "core.notification",
+    "pk": 5,
+    "fields": {
+        "recipient": [
+            "DEAN1"
+        ],
+        "message": "Meeting Status: Board of Studies is now marked 'Concluded'!",
+        "link": "/portal/meetings/4/",
+        "is_read": false,
+        "created_at": "2026-04-21T03:22:44.457Z"
+    }
+},
+{
+    "model": "core.notification",
+    "pk": 6,
+    "fields": {
+        "recipient": [
+            "RECTOR"
+        ],
+        "message": "Meeting Status: Board of Studies is now marked 'Concluded'!",
+        "link": "/portal/meetings/4/",
+        "is_read": false,
+        "created_at": "2026-04-21T03:22:44.458Z"
+    }
+},
+{
+    "model": "core.notification",
+    "pk": 7,
+    "fields": {
+        "recipient": [
+            "teacher1"
+        ],
+        "message": "Meeting Status: Board of Studies is now marked 'Concluded'!",
+        "link": "/portal/meetings/4/",
+        "is_read": true,
+        "created_at": "2026-04-21T03:22:44.459Z"
+    }
+},
+{
+    "model": "core.notification",
+    "pk": 8,
+    "fields": {
+        "recipient": [
+            "HOD1"
+        ],
+        "message": "Meeting Status: Board of Studies is now marked 'Concluded'!",
+        "link": "/portal/meetings/4/",
+        "is_read": false,
+        "created_at": "2026-04-21T03:22:44.459Z"
+    }
+},
+{
+    "model": "core.department",
+    "pk": 1,
+    "fields": {
+        "name": "Software Engineering",
+        "faculty": 1,
+        "hod": [
+            "HOD1"
+        ]
+    }
+},
+{
+    "model": "core.department",
+    "pk": 2,
+    "fields": {
+        "name": "Engineering Technology",
+        "faculty": 1,
+        "hod": null
+    }
+},
+{
+    "model": "core.faculty",
+    "pk": 1,
+    "fields": {
+        "name": "Engineering and IT",
+        "dean": [
+            "DEAN1"
+        ]
+    }
+},
+{
+    "model": "core.faculty",
+    "pk": 2,
+    "fields": {
+        "name": "Arts and Social Sciences",
+        "dean": null
+    }
+},
+{
+    "model": "core.faculty",
+    "pk": 3,
+    "fields": {
+        "name": "Management Sciences",
+        "dean": null
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 1,
+    "fields": {
+        "action_time": "2026-04-09T11:06:14.569Z",
+        "user": [
+            "zaingillani09"
+        ],
+        "content_type": [
+            "accounts",
+            "user"
+        ],
+        "object_id": "8",
+        "object_repr": "teacher2",
+        "action_flag": 1,
+        "change_message": "[{\"added\": {}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 2,
+    "fields": {
+        "action_time": "2026-04-09T11:07:14.823Z",
+        "user": [
+            "zaingillani09"
+        ],
+        "content_type": [
+            "accounts",
+            "user"
+        ],
+        "object_id": "8",
+        "object_repr": "teacher2",
+        "action_flag": 2,
+        "change_message": "[{\"changed\": {\"fields\": [\"Groups\", \"Faculty\", \"Departments\"]}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 3,
+    "fields": {
+        "action_time": "2026-04-09T11:07:23.320Z",
+        "user": [
+            "zaingillani09"
+        ],
+        "content_type": [
+            "accounts",
+            "user"
+        ],
+        "object_id": "8",
+        "object_repr": "teacher2",
+        "action_flag": 2,
+        "change_message": "[{\"changed\": {\"fields\": [\"Primary department\"]}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 4,
+    "fields": {
+        "action_time": "2026-04-10T15:27:47.596Z",
+        "user": [
+            "zaingillani09"
+        ],
+        "content_type": [
+            "accounts",
+            "user"
+        ],
+        "object_id": "9",
+        "object_repr": "teacher3",
+        "action_flag": 1,
+        "change_message": "[{\"added\": {}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 5,
+    "fields": {
+        "action_time": "2026-04-10T16:10:14.556Z",
+        "user": [
+            "zaingillani09"
+        ],
+        "content_type": [
+            "accounts",
+            "user"
+        ],
+        "object_id": "9",
+        "object_repr": "teacher3",
+        "action_flag": 2,
+        "change_message": "[{\"changed\": {\"fields\": [\"Groups\", \"Faculty\", \"Primary department\", \"Departments\"]}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 6,
+    "fields": {
+        "action_time": "2026-04-10T16:12:02.926Z",
+        "user": [
+            "teacher3"
+        ],
+        "content_type": [
+            "issues",
+            "issue"
+        ],
+        "object_id": "12",
+        "object_repr": "test 7 [Draft]",
+        "action_flag": 1,
+        "change_message": "[{\"added\": {}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 7,
+    "fields": {
+        "action_time": "2026-04-10T16:12:43.734Z",
+        "user": [
+            "HOD1"
+        ],
+        "content_type": [
+            "issues",
+            "issue"
+        ],
+        "object_id": "12",
+        "object_repr": "test 7 [HOD Approved (Pending Faculty Board)]",
+        "action_flag": 2,
+        "change_message": "[{\"added\": {\"name\": \"issue decision\", \"object\": \"HOD Decision: test 7 - APPROVE\"}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 8,
+    "fields": {
+        "action_time": "2026-04-10T16:13:12.223Z",
+        "user": [
+            "DEAN1"
+        ],
+        "content_type": [
+            "issues",
+            "issue"
+        ],
+        "object_id": "12",
+        "object_repr": "test 7 [Dean Approved (Pending Deans Committee)]",
+        "action_flag": 2,
+        "change_message": "[{\"added\": {\"name\": \"issue decision\", \"object\": \"DEAN Decision: test 7 - APPROVE\"}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 9,
+    "fields": {
+        "action_time": "2026-04-10T16:13:36.941Z",
+        "user": [
+            "RECTOR"
+        ],
+        "content_type": [
+            "issues",
+            "issue"
+        ],
+        "object_id": "12",
+        "object_repr": "test 7 [Final Approval (Rector)]",
+        "action_flag": 2,
+        "change_message": "[{\"added\": {\"name\": \"issue decision\", \"object\": \"RECTOR Decision: test 7 - APPROVE\"}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 10,
+    "fields": {
+        "action_time": "2026-04-19T09:02:56.297Z",
+        "user": [
+            "teacher1"
+        ],
+        "content_type": [
+            "issues",
+            "issue"
+        ],
+        "object_id": "13",
+        "object_repr": "TEST MEETING [Draft]",
+        "action_flag": 1,
+        "change_message": "[{\"added\": {}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 11,
+    "fields": {
+        "action_time": "2026-04-19T11:49:32.540Z",
+        "user": [
+            "HOD1"
+        ],
+        "content_type": [
+            "meetings",
+            "meeting"
+        ],
+        "object_id": "1",
+        "object_repr": "Board of Studies on 2026-04-19",
+        "action_flag": 1,
+        "change_message": "[{\"added\": {}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 12,
+    "fields": {
+        "action_time": "2026-04-19T12:17:53.325Z",
+        "user": [
+            "HOD1"
+        ],
+        "content_type": [
+            "meetings",
+            "meeting"
+        ],
+        "object_id": "2",
+        "object_repr": "Board of Studies on 2026-04-19",
+        "action_flag": 1,
+        "change_message": "[{\"added\": {}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 13,
+    "fields": {
+        "action_time": "2026-04-20T11:32:46.130Z",
+        "user": [
+            "DEAN1"
+        ],
+        "content_type": [
+            "meetings",
+            "meeting"
+        ],
+        "object_id": "3",
+        "object_repr": "Board of Faculty on 2026-04-20",
+        "action_flag": 1,
+        "change_message": "[{\"added\": {}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 14,
+    "fields": {
+        "action_time": "2026-04-21T03:16:07.106Z",
+        "user": [
+            "HOD1"
+        ],
+        "content_type": [
+            "meetings",
+            "meeting"
+        ],
+        "object_id": "2",
+        "object_repr": "Board of Studies on 2026-04-19",
+        "action_flag": 2,
+        "change_message": "[{\"changed\": {\"fields\": [\"Status\"]}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 15,
+    "fields": {
+        "action_time": "2026-04-21T03:16:17.641Z",
+        "user": [
+            "HOD1"
+        ],
+        "content_type": [
+            "meetings",
+            "meeting"
+        ],
+        "object_id": "1",
+        "object_repr": "Board of Studies on 2026-04-19",
+        "action_flag": 2,
+        "change_message": "[{\"changed\": {\"fields\": [\"Status\"]}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 16,
+    "fields": {
+        "action_time": "2026-04-21T03:17:03.118Z",
+        "user": [
+            "HOD1"
+        ],
+        "content_type": [
+            "meetings",
+            "meeting"
+        ],
+        "object_id": "4",
+        "object_repr": "Board of Studies on 2026-04-21",
+        "action_flag": 1,
+        "change_message": "[{\"added\": {}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 17,
+    "fields": {
+        "action_time": "2026-04-21T03:18:21.535Z",
+        "user": [
+            "HOD1"
+        ],
+        "content_type": [
+            "meetings",
+            "meeting"
+        ],
+        "object_id": "2",
+        "object_repr": "Board of Studies on 2026-04-19",
+        "action_flag": 2,
+        "change_message": "[{\"changed\": {\"fields\": [\"Minutes attachment\"]}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 18,
+    "fields": {
+        "action_time": "2026-04-21T03:22:44.484Z",
+        "user": [
+            "HOD1"
+        ],
+        "content_type": [
+            "meetings",
+            "meeting"
+        ],
+        "object_id": "4",
+        "object_repr": "Board of Studies on 2026-04-21",
+        "action_flag": 2,
+        "change_message": "[{\"changed\": {\"fields\": [\"Status\", \"Minutes attachment\"]}}]"
+    }
+}
+]
