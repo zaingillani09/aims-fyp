@@ -3,8 +3,9 @@
 {% block content %}
 <h1 class="page-title">Meeting Schedule</h1>
 
-<div class="glass-panel" style="padding: 0; overflow: hidden;">
-    {% if meetings %}
+<div class="glass-panel" style="padding: 0; overflow: hidden; margin-bottom: 24px;">
+    <h2 style="padding: 20px 20px 10px 20px; margin: 0; color:white; font-size:1.4rem;">Scheduled Meetings</h2>
+    {% if scheduled_meetings %}
     <table class="data-table">
         <thead>
             <tr>
@@ -16,7 +17,7 @@
             </tr>
         </thead>
         <tbody>
-            {% for meeting in meetings %}
+            {% for meeting in scheduled_meetings %}
             <tr>
                 <td style="font-weight: 500;">
                     <a href="{% url 'teacher_meeting_detail' meeting.pk %}" style="color: #60a5fa; text-decoration: none; transition: color 0.2s;">
@@ -27,7 +28,7 @@
                 <td style="color:#cbd5e1;">{{ meeting.date|date:"M d, Y" }} at {{ meeting.time|time:"H:i" }}</td>
                 <td style="color:#cbd5e1;">{{ meeting.location|default:"TBA" }}</td>
                 <td>
-                    <span class="badge" style="background: rgba(255,255,255,0.15); color:white;">
+                    <span class="badge" style="background: rgba(99, 102, 241, 0.2); color: #818cf8;">
                         {{ meeting.get_status_display }}
                     </span>
                 </td>
@@ -37,7 +38,49 @@
     </table>
     {% else %}
     <div style="padding: 40px; text-align: center; color: #94a3b8;">
-        <p>You have no upcoming meetings dynamically scheduled.</p>
+        <p>You have no upcoming scheduled meetings.</p>
+    </div>
+    {% endif %}
+</div>
+
+<div class="glass-panel" style="padding: 0; overflow: hidden;">
+    <h2 style="padding: 20px 20px 10px 20px; margin: 0; color:white; font-size:1.4rem;">Past & Concluded Meetings</h2>
+    {% if past_meetings %}
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Meeting Type</th>
+                <th>Organizer</th>
+                <th>Date & Time</th>
+                <th>Location</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for meeting in past_meetings %}
+            <tr>
+                <td style="font-weight: 500;">
+                    <a href="{% url 'teacher_meeting_detail' meeting.pk %}" style="color: #60a5fa; text-decoration: none; transition: color 0.2s;">
+                        {{ meeting.get_meeting_type_display }}
+                    </a>
+                </td>
+                <td style="color:#cbd5e1;">{{ meeting.organizer.first_name }} {{ meeting.organizer.last_name }}</td>
+                <td style="color:#cbd5e1;">{{ meeting.date|date:"M d, Y" }} at {{ meeting.time|time:"H:i" }}</td>
+                <td style="color:#cbd5e1;">{{ meeting.location|default:"TBA" }}</td>
+                <td>
+                    {% if meeting.status == 'CONCLUDED' %}
+                        <span class="badge success">Concluded</span>
+                    {% else %}
+                        <span class="badge danger">Cancelled</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div style="padding: 40px; text-align: center; color: #94a3b8;">
+        <p>No past or cancelled meetings recorded.</p>
     </div>
     {% endif %}
 </div>

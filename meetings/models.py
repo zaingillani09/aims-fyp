@@ -5,6 +5,7 @@ class Meeting(models.Model):
     class MeetingType(models.TextChoices):
         BOS = "BOS", "Board of Studies"
         BOF = "BOF", "Board of Faculty"
+        DCM = "DCM", "Deans Committee Meeting"
 
     class Status(models.TextChoices):
         SCHEDULED = "SCHEDULED", "Scheduled"

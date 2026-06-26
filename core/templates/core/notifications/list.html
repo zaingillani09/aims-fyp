@@ -1,0 +1,66 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+    <h1 class="page-title" style="margin: 0;">Notifications History</h1>
+    
+    {% if unread_count > 0 %}
+    <form method="post" action="{% url 'mark_all_notifications_read' %}">
+        {% csrf_token %}
+        <button type="submit" class="btn" style="background: rgba(99, 102, 241, 0.2); border: 1px solid #6366f1; color: #a5b4fc; font-weight: 600;">
+            ✓ Mark All as Read
+        </button>
+    </form>
+    {% endif %}
+</div>
+
+<div class="glass-panel" style="padding: 20px;">
+    {% if notifications %}
+        <div style="display: flex; flex-direction: column; gap: 15px;">
+            {% for notif in notifications %}
+            <div style="background: {% if notif.is_read %}rgba(255,255,255,0.01){% else %}rgba(139, 92, 246, 0.05){% endif %}; 
+                        padding: 20px; 
+                        border-radius: 12px; 
+                        border: 1px solid {% if notif.is_read %}rgba(255,255,255,0.04){% else %}rgba(139, 92, 246, 0.15){% endif %}; 
+                        border-left: 4px solid {% if notif.is_read %}rgba(255,255,255,0.1){% else %}#8b5cf6{% endif %};
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        transition: all 0.3s ease;">
+                <div>
+                    <p style="color: {% if notif.is_read %}#cbd5e1{% else %}white{% endif %}; 
+                              margin: 0; 
+                              font-size: 1.05rem; 
+                              font-weight: {% if notif.is_read %}400{% else %}500{% endif %};">
+                        {{ notif.message }}
+                    </p>
+                    <span style="display: block; font-size: 0.8rem; color: #64748b; margin-top: 5px;">
+                        {{ notif.created_at|timesince }} ago
+                    </span>
+                </div>
+                
+                <div>
+                    {% if notif.link %}
+                        <a href="{% url 'mark_notification_read' notif.pk %}" class="btn" style="padding: 8px 16px; font-size: 0.85rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white;">
+                            View Details
+                        </a>
+                    {% else %}
+                        {% if not notif.is_read %}
+                            <a href="{% url 'mark_notification_read' notif.pk %}" class="btn" style="padding: 8px 16px; font-size: 0.85rem; background: rgba(34, 197, 94, 0.2); border: 1px solid #22c55e; color: #4ade80;">
+                                ✓ Mark Read
+                            </a>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div style="padding: 60px; text-align: center; color: #94a3b8;">
+            <div style="font-size: 3rem; margin-bottom: 15px;">🔔</div>
+            <h3 style="color: white; margin-top: 0; margin-bottom: 8px;">No Notifications Yet</h3>
+            <p style="font-weight: 300; margin: 0;">You're all caught up! When updates occur, they will appear here.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

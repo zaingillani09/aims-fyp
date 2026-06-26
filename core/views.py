@@ -1,20 +1,26 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from django.db.models import Q
+from django.contrib import messages
 from issues.models import Issue
 from meetings.models import Meeting
-from .forms import IssueSubmitForm
-from django.contrib import messages
+from .forms import IssueSubmitForm, MeetingForm, ConcludeMeetingForm
 
 @login_required
 def portal_router(request):
     role = getattr(request.user, 'role', None)
-    if request.user.is_superuser or role in ["HOD", "DEAN", "RECTOR"]:
+    if role == "HOD":
+        return redirect('hod_dashboard')
+    elif role == "DEAN":
+        return redirect('dean_dashboard')
+    elif role == "RECTOR":
+        return redirect('rector_dashboard')
+    elif request.user.is_superuser:
         return redirect('/admin/')
     return redirect('teacher_dashboard')
 
 @login_required
 def teacher_dashboard(request):
-    # Restrict to teachers
     if getattr(request.user, 'role', None) != "TEACHER":
         return redirect('portal_router')
 
@@ -28,8 +34,75 @@ def teacher_dashboard(request):
     return render(request, 'core/teacher/dashboard.html', context)
 
 @login_required
+def hod_dashboard(request):
+    if getattr(request.user, 'role', None) != "HOD":
+        return redirect('portal_router')
+
+    dept = getattr(request.user, 'hod_of', None)
+    if not dept:
+        messages.warning(request, "You are not assigned as HOD of any department.")
+        return render(request, 'core/hod/dashboard.html', {
+            'pending_issues_count': 0,
+            'upcoming_meetings_count': 0,
+            'pending_issues': [],
+            'all_issues': [],
+            'scheduled_meetings': [],
+            'past_meetings': []
+        })
+
+    pending_issues = Issue.objects.filter(department=dept, status__in=['SUBMITTED', 'RETURNED_TO_HOD']).order_by('-created_at')
+    all_issues = Issue.objects.filter(department=dept).exclude(status='DRAFT').order_by('-updated_at')
+    scheduled_meetings = Meeting.objects.filter(department=dept, status='SCHEDULED').order_by('date', 'time')
+    past_meetings = Meeting.objects.filter(department=dept, status__in=['CONCLUDED', 'CANCELLED']).order_by('-date', '-time')
+
+    context = {
+        'department': dept,
+        'pending_issues_count': pending_issues.count(),
+        'upcoming_meetings_count': scheduled_meetings.count(),
+        'pending_issues': pending_issues,
+        'all_issues': all_issues,
+        'scheduled_meetings': scheduled_meetings,
+        'past_meetings': past_meetings,
+    }
+    return render(request, 'core/hod/dashboard.html', context)
+
+@login_required
+def dean_dashboard(request):
+    if getattr(request.user, 'role', None) != "DEAN":
+        return redirect('portal_router')
+
+    faculty = getattr(request.user, 'dean_of', None)
+    if not faculty:
+        messages.warning(request, "You are not assigned as Dean of any faculty.")
+        return render(request, 'core/dean/dashboard.html', {
+            'pending_issues_count': 0,
+            'upcoming_meetings_count': 0,
+            'pending_issues': [],
+            'all_issues': [],
+            'scheduled_meetings': [],
+            'past_meetings': []
+        })
+
+    pending_issues = Issue.objects.filter(department__faculty=faculty, status__in=['HOD_APPROVED', 'RETURNED_TO_DEAN']).order_by('-created_at')
+    all_issues = Issue.objects.filter(department__faculty=faculty).exclude(status='DRAFT').order_by('-updated_at')
+    scheduled_meetings = Meeting.objects.filter(faculty=faculty, status='SCHEDULED').order_by('date', 'time')
+    past_meetings = Meeting.objects.filter(faculty=faculty, status__in=['CONCLUDED', 'CANCELLED']).order_by('-date', '-time')
+
+    context = {
+        'faculty': faculty,
+        'pending_issues_count': pending_issues.count(),
+        'upcoming_meetings_count': scheduled_meetings.count(),
+        'pending_issues': pending_issues,
+        'all_issues': all_issues,
+        'scheduled_meetings': scheduled_meetings,
+        'past_meetings': past_meetings,
+    }
+    return render(request, 'core/dean/dashboard.html', context)
+
+@login_required
 def teacher_issues(request):
-    if getattr(request.user, 'role', None) != "TEACHER":
+    role = getattr(request.user, 'role', None)
+    if role not in ["TEACHER", "HOD", "DEAN"]:
         return redirect('portal_router')
         
     issues = Issue.objects.filter(created_by=request.user).order_by('-created_at')
@@ -37,7 +110,8 @@ def teacher_issues(request):
 
 @login_required
 def teacher_submit_issue(request):
-    if getattr(request.user, 'role', None) != "TEACHER":
+    role = getattr(request.user, 'role', None)
+    if role not in ["TEACHER", "HOD", "DEAN"]:
         return redirect('portal_router')
 
     if request.method == 'POST':
@@ -47,11 +121,15 @@ def teacher_submit_issue(request):
             issue.created_by = request.user
             issue.save()
             
-            # If the user clicked "Submit to HOD", transition the state
             if request.POST.get('action') == 'submit':
                 try:
                     issue.submit(request.user)
-                    messages.success(request, "Your issue has been successfully submitted to your HOD.")
+                    if role == "DEAN":
+                        messages.success(request, "Your issue has been successfully submitted to the Rector.")
+                    elif role == "HOD":
+                        messages.success(request, "Your issue has been successfully submitted to your Dean.")
+                    else:
+                        messages.success(request, "Your issue has been successfully submitted to your HOD.")
                 except Exception as e:
                     messages.warning(request, f"Issue saved as draft, but couldn't submit: {str(e)}")
             else:
@@ -64,21 +142,80 @@ def teacher_submit_issue(request):
     return render(request, 'core/teacher/submit_issue.html', {'form': form})
 
 @login_required
+def teacher_issues_all(request):
+    # Fallback/routing view
+    return redirect('portal_router')
+
+@login_required
 def teacher_meetings(request):
-    if getattr(request.user, 'role', None) != "TEACHER":
+    # Filter meetings that the user attends or organized
+    scheduled_meetings = Meeting.objects.filter(
+        Q(attendees=request.user) | Q(organizer=request.user),
+        status='SCHEDULED'
+    ).distinct().order_by('date', 'time')
+    past_meetings = Meeting.objects.filter(
+        Q(attendees=request.user) | Q(organizer=request.user),
+        status__in=['CONCLUDED', 'CANCELLED']
+    ).distinct().order_by('-date', '-time')
+    return render(request, 'core/teacher/meetings.html', {
+        'scheduled_meetings': scheduled_meetings,
+        'past_meetings': past_meetings
+    })
+
+@login_required
+def meeting_create(request):
+    role = getattr(request.user, 'role', None)
+    if role not in ["HOD", "DEAN", "RECTOR"]:
         return redirect('portal_router')
 
-    meetings = Meeting.objects.filter(attendees=request.user).order_by('date', 'time')
-    return render(request, 'core/teacher/meetings.html', {'meetings': meetings})
+    if role == 'HOD':
+        meeting_type = 'BOS'
+    elif role == 'DEAN':
+        meeting_type = 'BOF'
+    else:
+        meeting_type = 'DCM'
+
+    if request.method == 'POST':
+        form = MeetingForm(request.POST, user=request.user, meeting_type=meeting_type)
+        if form.is_valid():
+            meeting = form.save(commit=False)
+            meeting.organizer = request.user
+            meeting.meeting_type = meeting_type
+            
+            if role == 'HOD':
+                meeting.department = getattr(request.user, 'hod_of', None)
+            elif role == 'DEAN':
+                meeting.faculty = getattr(request.user, 'dean_of', None)
+            # For RECTOR/DCM, meeting.department and meeting.faculty remain None
+                
+            meeting.save()
+            form.save_m2m()
+            messages.success(request, f"Successfully scheduled {meeting.get_meeting_type_display()} meeting.")
+            if role == 'RECTOR':
+                return redirect('rector_dashboard')
+            return redirect('teacher_meetings')
+    else:
+        form = MeetingForm(user=request.user, meeting_type=meeting_type)
+
+    return render(request, 'core/meetings/create_meeting.html', {'form': form, 'meeting_type': meeting_type})
 
 @login_required
 def teacher_issue_detail(request, pk):
-    from django.shortcuts import get_object_or_404
-    if getattr(request.user, 'role', None) != "TEACHER":
+    role = getattr(request.user, 'role', None)
+    if role not in ["TEACHER", "HOD", "DEAN"]:
         return redirect('portal_router')
 
     issue = get_object_or_404(Issue, pk=pk, created_by=request.user)
-    editable = issue.status in ['DRAFT', 'RETURNED']
+    
+    editable = False
+    if issue.status == 'DRAFT':
+        editable = True
+    elif issue.status == 'RETURNED' and role == 'TEACHER':
+        editable = True
+    elif issue.status == 'RETURNED_TO_HOD' and role == 'HOD':
+        editable = True
+    elif issue.status == 'RETURNED_TO_DEAN' and role == 'DEAN':
+        editable = True
 
     if request.method == 'POST' and editable:
         form = IssueSubmitForm(request.POST, instance=issue, user=request.user)
@@ -87,7 +224,12 @@ def teacher_issue_detail(request, pk):
             if request.POST.get('action') == 'submit':
                 try:
                     issue.submit(request.user)
-                    messages.success(request, "Your issue has been successfully submitted to your HOD.")
+                    if role == "DEAN":
+                        messages.success(request, "Your issue has been successfully submitted to the Rector.")
+                    elif role == "HOD":
+                        messages.success(request, "Your issue has been successfully submitted to your Dean.")
+                    else:
+                        messages.success(request, "Your issue has been successfully submitted to your HOD.")
                 except Exception as e:
                     messages.warning(request, f"Issue updated safely, but couldn't submit: {str(e)}")
             else:
@@ -104,20 +246,179 @@ def teacher_issue_detail(request, pk):
 
 @login_required
 def teacher_meeting_detail(request, pk):
-    from django.shortcuts import get_object_or_404
-    if getattr(request.user, 'role', None) != "TEACHER":
+    # Allow view for organizers or attendees
+    meeting = get_object_or_404(
+        Meeting.objects.filter(
+            Q(attendees=request.user) | Q(organizer=request.user)
+        ).distinct(),
+        pk=pk
+    )
+    is_organizer = (meeting.organizer == request.user)
+    conclude_form = ConcludeMeetingForm() if is_organizer else None
+
+    return render(request, 'core/teacher/meeting_detail.html', {
+        'meeting': meeting,
+        'is_organizer': is_organizer,
+        'conclude_form': conclude_form
+    })
+
+@login_required
+def meeting_conclude(request, pk):
+    role = getattr(request.user, 'role', None)
+    if role not in ["HOD", "DEAN", "RECTOR"]:
         return redirect('portal_router')
 
-    meeting = get_object_or_404(Meeting, pk=pk, attendees=request.user)
-    return render(request, 'core/teacher/meeting_detail.html', {'meeting': meeting})
+    meeting = get_object_or_404(Meeting, pk=pk, organizer=request.user)
+
+    if request.method == 'POST':
+        form = ConcludeMeetingForm(request.POST, request.FILES, instance=meeting)
+        if form.is_valid():
+            meeting = form.save(commit=False)
+            meeting.status = Meeting.Status.CONCLUDED
+            meeting.save()
+            messages.success(request, f"Meeting has been successfully concluded and minutes uploaded.")
+            return redirect('teacher_meeting_detail', pk=pk)
+        else:
+            messages.error(request, "Failed to conclude meeting. Please upload the minutes file.")
+            is_organizer = (meeting.organizer == request.user)
+            return render(request, 'core/teacher/meeting_detail.html', {
+                'meeting': meeting,
+                'is_organizer': is_organizer,
+                'conclude_form': form
+            })
+            
+    return redirect('teacher_meeting_detail', pk=pk)
+
+@login_required
+def meeting_cancel(request, pk):
+    role = getattr(request.user, 'role', None)
+    if role not in ["HOD", "DEAN", "RECTOR"]:
+        return redirect('portal_router')
+
+    meeting = get_object_or_404(Meeting, pk=pk, organizer=request.user)
+
+    if request.method == 'POST':
+        meeting.status = Meeting.Status.CANCELLED
+        meeting.save()
+        messages.success(request, f"Meeting has been successfully cancelled.")
+        
+    return redirect('teacher_meeting_detail', pk=pk)
 
 @login_required
 def mark_notification_read(request, pk):
-    from django.shortcuts import get_object_or_404
     from core.models import Notification
     notification = get_object_or_404(Notification, pk=pk, recipient=request.user)
     notification.is_read = True
     notification.save()
     if notification.link:
         return redirect(notification.link)
-    return redirect('teacher_dashboard')
+    return redirect('portal_router')
+
+@login_required
+def rector_dashboard(request):
+    if getattr(request.user, 'role', None) != "RECTOR":
+        return redirect('portal_router')
+
+    pending_issues = Issue.objects.filter(status='DEAN_APPROVED').order_by('-created_at')
+    finalized_issues = Issue.objects.filter(status__in=['FINAL_APPROVED', 'REJECTED']).order_by('-updated_at')
+    scheduled_meetings = Meeting.objects.filter(
+        organizer=request.user,
+        status=Meeting.Status.SCHEDULED
+    ).order_by('date', 'time')
+    past_meetings = Meeting.objects.filter(
+        organizer=request.user,
+        status__in=[Meeting.Status.CONCLUDED, Meeting.Status.CANCELLED]
+    ).order_by('-date', '-time')
+
+    context = {
+        'pending_issues_count': pending_issues.count(),
+        'finalized_issues_count': finalized_issues.count(),
+        'pending_issues': pending_issues,
+        'finalized_issues': finalized_issues,
+        'scheduled_meetings': scheduled_meetings,
+        'past_meetings': past_meetings,
+    }
+    return render(request, 'core/rector/dashboard.html', context)
+
+@login_required
+def issue_review(request, pk):
+    role = getattr(request.user, 'role', None)
+    if role not in ["HOD", "DEAN", "RECTOR"]:
+        return redirect('portal_router')
+
+    issue = get_object_or_404(Issue, pk=pk)
+
+    # View authorization check (Must belong to department/faculty, and not be a draft)
+    view_allowed = False
+    if role == "HOD":
+        dept = getattr(request.user, 'hod_of', None)
+        if dept and issue.department == dept:
+            view_allowed = True
+    elif role == "DEAN":
+        faculty = getattr(request.user, 'dean_of', None)
+        if faculty and issue.department.faculty == faculty:
+            view_allowed = True
+    elif role == "RECTOR":
+        # Rector can view any non-draft escalated or decided issue
+        view_allowed = (issue.status != 'DRAFT')
+
+    if not view_allowed or issue.status == 'DRAFT':
+        messages.error(request, "You do not have permission to view this issue.")
+        return redirect('portal_router')
+
+    # Decision authorization check
+    can_decide = False
+    if role == "HOD" and issue.status in ['SUBMITTED', 'RETURNED_TO_HOD']:
+        can_decide = True
+    elif role == "DEAN" and issue.status in ['HOD_APPROVED', 'RETURNED_TO_DEAN']:
+        can_decide = True
+    elif role == "RECTOR" and issue.status == 'DEAN_APPROVED':
+        can_decide = True
+
+    from .forms import IssueDecisionForm
+    from issues.models import IssueDecision
+
+    form = None
+    if can_decide:
+        if request.method == 'POST':
+            form = IssueDecisionForm(request.POST)
+            if form.is_valid():
+                decision = form.save(commit=False)
+                decision.issue = issue
+                decision.decided_by = request.user
+                try:
+                    # The save method in IssueDecision handles status transition and validation
+                    decision.save()
+                    messages.success(request, f"Your decision has been successfully recorded for: '{issue.title}'")
+                    return redirect('portal_router')
+                except Exception as e:
+                    messages.error(request, f"Error saving decision: {str(e)}")
+        else:
+            form = IssueDecisionForm()
+
+    # Get decision history
+    decisions = issue.decisions.all().order_by('decided_at')
+
+    return render(request, 'core/issues/issue_review.html', {
+        'issue': issue,
+        'form': form,
+        'can_decide': can_decide,
+        'decisions': decisions,
+    })
+
+@login_required
+def notifications_list(request):
+    notifications = request.user.notifications.all()
+    unread_count = notifications.filter(is_read=False).count()
+    return render(request, 'core/notifications/list.html', {
+        'notifications': notifications,
+        'unread_count': unread_count
+    })
+
+@login_required
+def mark_all_notifications_read(request):
+    if request.method == 'POST':
+        request.user.notifications.filter(is_read=False).update(is_read=True)
+        messages.success(request, "All notifications marked as read.")
+    return redirect('notifications_list')
+

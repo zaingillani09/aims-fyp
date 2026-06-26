@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AIMS Portal</title>
-    <link rel="stylesheet" href="{% static 'css/portal.css' %}">
+    <link rel="stylesheet" href="{% static 'css/portal.css' %}?v=1.4">
 </head>
 <body>
 
@@ -13,13 +13,43 @@
     <div class="portal-sidebar">
         <div class="portal-logo">AIMS Portal</div>
         
-        <a href="{% url 'teacher_dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'teacher_dashboard' %}active{% endif %}">
-            Dashboard
-        </a>
-        <a href="{% url 'teacher_issues' %}" class="nav-link {% if 'issues' in request.resolver_match.url_name %}active{% endif %}">
-            My Issues
-        </a>
-        <a href="{% url 'teacher_meetings' %}" class="nav-link {% if request.resolver_match.url_name == 'teacher_meetings' %}active{% endif %}">
+        {% if request.user.role == 'TEACHER' %}
+            <a href="{% url 'teacher_dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'teacher_dashboard' %}active{% endif %}">
+                Dashboard
+            </a>
+            <a href="{% url 'teacher_issues' %}" class="nav-link {% if 'issues' in request.resolver_match.url_name %}active{% endif %}">
+                My Issues
+            </a>
+        {% elif request.user.role == 'HOD' %}
+            <a href="{% url 'hod_dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'hod_dashboard' %}active{% endif %}">
+                Dashboard
+            </a>
+            <a href="{% url 'teacher_issues' %}" class="nav-link {% if 'issues' in request.resolver_match.url_name %}active{% endif %}">
+                My Issues
+            </a>
+            <a href="{% url 'meeting_create' %}" class="nav-link {% if request.resolver_match.url_name == 'meeting_create' %}active{% endif %}">
+                Schedule BOS
+            </a>
+        {% elif request.user.role == 'DEAN' %}
+            <a href="{% url 'dean_dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'dean_dashboard' %}active{% endif %}">
+                Dashboard
+            </a>
+            <a href="{% url 'teacher_issues' %}" class="nav-link {% if 'issues' in request.resolver_match.url_name %}active{% endif %}">
+                My Issues
+            </a>
+            <a href="{% url 'meeting_create' %}" class="nav-link {% if request.resolver_match.url_name == 'meeting_create' %}active{% endif %}">
+                Schedule BOF
+            </a>
+        {% elif request.user.role == 'RECTOR' %}
+            <a href="{% url 'rector_dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'rector_dashboard' %}active{% endif %}">
+                Dashboard
+            </a>
+            <a href="{% url 'meeting_create' %}" class="nav-link {% if request.resolver_match.url_name == 'meeting_create' %}active{% endif %}">
+                Schedule DCM
+            </a>
+        {% endif %}
+
+        <a href="{% url 'teacher_meetings' %}" class="nav-link {% if request.resolver_match.url_name == 'teacher_meetings' or request.resolver_match.url_name == 'teacher_meeting_detail' %}active{% endif %}">
             Meetings Schedule
         </a>
 
@@ -53,6 +83,9 @@
                     {% else %}
                         <div class="notification-empty">No new notifications</div>
                     {% endif %}
+                    <a href="{% url 'notifications_list' %}" style="display: block; text-align: center; padding: 12px; font-size: 0.85rem; color: #60a5fa; border-top: 1px solid rgba(255,255,255,0.08); text-decoration: none; font-weight: 500; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='none'">
+                        View All Notifications
+                    </a>
                 </div>
             </div>
         </div>

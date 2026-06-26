@@ -1,0 +1,137 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<h1 class="page-title">Dean Dashboard - {{ faculty.name }}</h1>
+
+<div class="stats-grid">
+    <div class="glass-panel stat-card">
+        <h3>{{ pending_issues_count }}</h3>
+        <p>Pending Faculty Issues</p>
+    </div>
+    <div class="glass-panel stat-card">
+        <h3>{{ upcoming_meetings_count }}</h3>
+        <p>Scheduled BOF Meetings</p>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-bottom: 30px;">
+    <!-- Pending Issues List -->
+    <div class="glass-panel" style="margin-bottom: 0;">
+        <h2 style="margin-top:0; color:white; font-size:1.4rem;">Pending Issues Review</h2>
+        <p style="color:#94a3b8; font-weight:300; margin-bottom: 20px;">Issues awaiting faculty board decision</p>
+        
+        {% if pending_issues %}
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Issue Title</th>
+                    <th>Submitted By</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for issue in pending_issues %}
+                <tr>
+                    <td style="font-weight: 500; color: white;">{{ issue.title }}</td>
+                    <td style="color:#cbd5e1;">{{ issue.created_by.get_full_name|default:issue.created_by.username }}</td>
+                    <td>
+                        <span class="badge {% if issue.status in 'FINAL_APPROVED,DEAN_APPROVED,HOD_APPROVED' %}success{% elif issue.status in 'REJECTED,RETURNED,RETURNED_TO_HOD,RETURNED_TO_DEAN' %}danger{% else %}warning{% endif %}">{{ issue.get_status_display }}</span>
+                    </td>
+                    <td>
+                        <a href="{% url 'issue_review' issue.id %}" class="btn" style="padding: 6px 12px; font-size: 0.85rem;">Review & Decide</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div style="padding: 40px; text-align: center; color: #94a3b8;">
+            <p>No pending issues to review at this time.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Scheduled Meetings & Quick Actions -->
+    <div style="display: flex; flex-direction: column; gap: 24px;">
+        <div class="glass-panel" style="margin-bottom: 0; flex-grow: 1;">
+            <h2 style="margin-top:0; color:white; font-size:1.4rem;">BOF Meetings</h2>
+            <div style="margin-top: 15px; display: flex; flex-direction: column; gap: 10px;">
+                <a href="{% url 'meeting_create' %}" class="btn" style="box-sizing: border-box; width: 100%;">Schedule BOF Meeting</a>
+                <a href="{% url 'teacher_meetings' %}" class="btn" style="box-sizing: border-box; width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);">View Schedule</a>
+            </div>
+            
+            <h3 style="color: white; font-size: 1.1rem; margin-top: 25px; margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 5px;">Upcoming Meetings</h3>
+            {% if scheduled_meetings %}
+                {% for meeting in scheduled_meetings|slice:":3" %}
+                <div style="background: rgba(255,255,255,0.02); padding: 12px; border-radius: 8px; margin-bottom: 10px; border-left: 3px solid #818cf8;">
+                    <a href="{% url 'teacher_meeting_detail' meeting.pk %}" style="color: #60a5fa; text-decoration: none; font-weight: 500;">
+                        {{ meeting.date|date:"M d, Y" }} at {{ meeting.time|time:"H:i" }}
+                    </a>
+                    <div style="font-size: 0.8rem; color: #94a3b8; margin-top: 3px;">Location: {{ meeting.location }}</div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p style="font-size: 0.85rem; color: #64748b;">No upcoming BOF meetings.</p>
+            {% endif %}
+
+            <h3 style="color: white; font-size: 1.1rem; margin-top: 25px; margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 5px;">Past & Concluded Meetings</h3>
+            {% if past_meetings %}
+                {% for meeting in past_meetings|slice:":3" %}
+                <div style="background: rgba(255,255,255,0.02); padding: 12px; border-radius: 8px; margin-bottom: 10px; border-left: 3px solid {% if meeting.status == 'CONCLUDED' %}#22c55e{% else %}#ef4444{% endif %};">
+                    <a href="{% url 'teacher_meeting_detail' meeting.pk %}" style="color: #cbd5e1; text-decoration: none; font-weight: 500;">
+                        {{ meeting.date|date:"M d, Y" }}
+                    </a>
+                    <span class="badge {% if meeting.status == 'CONCLUDED' %}success{% else %}danger{% endif %}" style="font-size: 0.7rem; float: right; padding: 2px 6px;">{{ meeting.get_status_display }}</span>
+                    <div style="font-size: 0.8rem; color: #94a3b8; margin-top: 3px;">Location: {{ meeting.location }}</div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p style="font-size: 0.85rem; color: #64748b;">No past BOF meetings.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="glass-panel" style="margin-top: 24px;">
+    <h2 style="margin-top:0; color:white; font-size:1.4rem;">Faculty Issues History</h2>
+    <p style="color:#94a3b8; font-weight:300; margin-bottom: 20px;">All non-draft issues submitted to this faculty throughout their lifecycles</p>
+    
+    {% if all_issues %}
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Issue Title</th>
+                <th>Department</th>
+                <th>Submitted By</th>
+                <th>Current Status</th>
+                <th>Last Updated</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for issue in all_issues %}
+            <tr>
+                <td style="font-weight: 500;">
+                    <a href="{% url 'issue_review' issue.id %}" style="color: #60a5fa; text-decoration: none; transition: color 0.2s;">
+                        {{ issue.title }}
+                    </a>
+                </td>
+                <td style="color:#cbd5e1;">{{ issue.department.name }}</td>
+                <td style="color:#cbd5e1;">{{ issue.created_by.get_full_name|default:issue.created_by.username }}</td>
+                <td>
+                    <span class="badge {% if issue.status in 'FINAL_APPROVED,DEAN_APPROVED,HOD_APPROVED' %}success{% elif issue.status in 'REJECTED,RETURNED,RETURNED_TO_HOD,RETURNED_TO_DEAN' %}danger{% else %}warning{% endif %}">
+                        {{ issue.get_status_display }}
+                    </span>
+                </td>
+                <td style="color:#cbd5e1;">{{ issue.updated_at|date:"M d, Y" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div style="padding: 40px; text-align: center; color: #94a3b8;">
+        <p>No issues have been submitted in this faculty yet.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -64,6 +64,49 @@
     </div>
     {% endif %}
 
+    {% if is_organizer and meeting.status == 'SCHEDULED' %}
+    <div style="margin-top: 30px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px;">
+        <h3 style="color:white; margin-top:0; margin-bottom: 15px;">Organizer Actions</h3>
+        
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px; align-items: start;">
+            <!-- Conclude Form -->
+            <div style="background: rgba(255,255,255,0.02); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+                <h4 style="color: white; margin-top: 0; margin-bottom: 10px;">Conclude Meeting & Upload Minutes</h4>
+                <p style="font-size: 0.85rem; color: #94a3b8; margin-top: 0; margin-bottom: 10px;">
+                    Upload the official meeting minutes document to finalize and notify all invitees.
+                </p>
+                <div style="font-size: 0.8rem; color: #facc15; margin-bottom: 15px; background: rgba(250, 204, 21, 0.08); padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(250, 204, 21, 0.15); display: inline-block;">
+                    ℹ️ Only .word or .pdf files are accepted here.
+                </div>
+                <form method="post" action="{% url 'meeting_conclude' meeting.pk %}" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div style="margin-bottom: 15px;">
+                        {{ conclude_form.minutes_attachment }}
+                        {% if conclude_form.minutes_attachment.errors %}
+                            <div style="color: #f87171; font-size: 0.8rem; margin-top: 5px; font-weight: 500;">
+                                ⚠️ {{ conclude_form.minutes_attachment.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <button type="submit" class="btn">Upload & Conclude</button>
+                </form>
+            </div>
+
+            <!-- Cancel Form -->
+            <div style="background: rgba(255,255,255,0.02); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); text-align: center; display: flex; flex-direction: column; justify-content: center; min-height: 100%; box-sizing: border-box;">
+                <h4 style="color: white; margin-top: 0; margin-bottom: 10px;">Cancel Meeting</h4>
+                <p style="font-size: 0.85rem; color: #94a3b8; margin-top: 0; margin-bottom: 20px;">
+                    Mark this scheduled meeting as cancelled.
+                </p>
+                <form method="post" action="{% url 'meeting_cancel' meeting.pk %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn" style="box-sizing: border-box; background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; color: #f87171; width: 100%;">Cancel Meeting</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
     <div style="margin-top: 40px;">
         <a href="{% url 'teacher_meetings' %}" class="btn" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);">Back to Schedule</a>
     </div>

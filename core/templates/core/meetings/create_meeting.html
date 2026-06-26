@@ -1,0 +1,259 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<style>
+#id_attendees, #id_agenda_issues {
+    padding: 10px;
+    margin: 10px 0 0 0;
+    max-height: 180px;
+    overflow-y: auto;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    box-sizing: border-box;
+}
+
+#id_attendees div, #id_agenda_issues div {
+    padding: 8px 12px;
+    border-radius: 6px;
+    transition: background-color 0.2s ease;
+}
+
+#id_attendees div:hover, #id_agenda_issues div:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+#id_attendees label, #id_agenda_issues label {
+    display: flex;
+    align-items: center;
+    color: #cbd5e1;
+    font-size: 0.95rem;
+    cursor: pointer;
+    font-weight: normal;
+    margin-bottom: 0;
+    width: 100%;
+}
+
+#id_attendees input[type="checkbox"], #id_agenda_issues input[type="checkbox"] {
+    margin-right: 12px;
+    width: 18px;
+    height: 18px;
+    accent-color: #6366f1;
+    cursor: pointer;
+}
+
+/* Custom Webkit Scrollbar */
+#id_attendees::-webkit-scrollbar, #id_agenda_issues::-webkit-scrollbar {
+    width: 6px;
+}
+
+#id_attendees::-webkit-scrollbar-track, #id_agenda_issues::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+}
+
+#id_attendees::-webkit-scrollbar-thumb, #id_agenda_issues::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 4px;
+}
+
+#id_attendees::-webkit-scrollbar-thumb:hover, #id_agenda_issues::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.25);
+}
+</style>
+
+<h1 class="page-title">Schedule a New {{ form.instance.get_meeting_type_display|default:meeting_type }} Meeting</h1>
+
+<div class="glass-panel" style="max-width: 700px;">
+    <p style="color:#94a3b8; font-weight:300; margin-top:0;">
+        Choose the date, time, and location for the meeting, then select the attendees and agenda items to attach.
+    </p>
+
+    <form method="post" style="margin-top:25px;">
+        {% csrf_token %}
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="{{ form.date.id_for_label }}">Date</label>
+                {{ form.date }}
+                {% if form.date.errors %}<div style="color:#ef4444; font-size:0.8rem; margin-top:5px;">{{ form.date.errors.0 }}</div>{% endif %}
+            </div>
+            
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="{{ form.time.id_for_label }}">Time</label>
+                {{ form.time }}
+                {% if form.time.errors %}<div style="color:#ef4444; font-size:0.8rem; margin-top:5px;">{{ form.time.errors.0 }}</div>{% endif %}
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.location.id_for_label }}">Location</label>
+            {{ form.location }}
+            {% if form.location.errors %}<div style="color:#ef4444; font-size:0.8rem; margin-top:5px;">{{ form.location.errors.0 }}</div>{% endif %}
+        </div>
+        
+        <div class="form-group">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <label for="{{ form.attendees.id_for_label }}" style="margin-bottom:0;">Invite Attendees</label>
+                <div style="font-size:0.85rem;">
+                    <a href="#" id="select-all-attendees" style="color:#60a5fa; text-decoration:none; margin-right:12px; font-weight: 500;">Select All</a>
+                    <a href="#" id="clear-all-attendees" style="color:#f87171; text-decoration:none; font-weight: 500;">Clear All</a>
+                </div>
+            </div>
+            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px; margin-bottom: 10px;">
+                <input type="text" id="attendee-search" placeholder="Search attendees by name..." class="form-control" style="background:rgba(0,0,0,0.25); padding:8px 12px; font-size:0.85rem; border-color: rgba(255,255,255,0.08); height: 38px; box-sizing: border-box;">
+                <select id="attendee-dept-filter" class="form-control" style="background:rgba(0,0,0,0.25); padding:8px 12px; font-size:0.85rem; border-color: rgba(255,255,255,0.08); color: #cbd5e1; height: 38px; box-sizing: border-box; cursor: pointer;">
+                    <option value="" style="background: #1e1b4b; color: #cbd5e1;">All Departments</option>
+                </select>
+            </div>
+            {{ form.attendees }}
+            {% if form.attendees.errors %}<div style="color:#ef4444; font-size:0.8rem; margin-top:5px;">{{ form.attendees.errors.0 }}</div>{% endif %}
+        </div>
+
+        <div class="form-group">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <label for="{{ form.agenda_issues.id_for_label }}" style="margin-bottom:0;">Attach Agenda Issues</label>
+                <div style="font-size:0.85rem;">
+                    <a href="#" id="select-all-agendas" style="color:#60a5fa; text-decoration:none; margin-right:12px; font-weight: 500;">Select All</a>
+                    <a href="#" id="clear-all-agendas" style="color:#f87171; text-decoration:none; font-weight: 500;">Clear All</a>
+                </div>
+            </div>
+            <input type="text" id="agenda-search" placeholder="Type to filter agendas..." class="form-control" style="margin-bottom:10px; background:rgba(0,0,0,0.25); padding:8px 12px; font-size:0.85rem; border-color: rgba(255,255,255,0.08);">
+            {{ form.agenda_issues }}
+            {% if form.agenda_issues.errors %}<div style="color:#ef4444; font-size:0.8rem; margin-top:5px;">{{ form.agenda_issues.errors.0 }}</div>{% endif %}
+        </div>
+
+        <div style="margin-top: 35px; display:flex; gap:15px; align-items:center;">
+            <button type="submit" class="btn">Schedule Meeting</button>
+            <a href="{% url 'teacher_meetings' %}" style="color:#94a3b8; text-decoration:none; font-size:0.9rem; margin-left:10px;">Cancel</a>
+        </div>
+    </form>
+</div>
+
+<script>
+// Serialize user department mappings from template context
+const userDepartments = {
+    {% for user in form.fields.attendees.queryset %}
+        "{{ user.id }}": [
+            {% if user.primary_department %}"{{ user.primary_department.name|escapejs }}",{% endif %}
+            {% for dept in user.departments.all %}
+                "{{ dept.name|escapejs }}",
+            {% endfor %}
+        ],
+    {% endfor %}
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Helper to filter checkboxes based on search query (for agendas)
+    function setupFilter(searchId, containerId) {
+        const searchInput = document.getElementById(searchId);
+        const container = document.getElementById(containerId);
+        if (searchInput && container) {
+            searchInput.addEventListener('input', function(e) {
+                const query = e.target.value.toLowerCase();
+                const checkboxes = container.querySelectorAll('input[type="checkbox"]');
+                checkboxes.forEach(cb => {
+                    const label = cb.closest('label');
+                    const wrapper = cb.closest('div') || label || cb;
+                    const text = label ? label.textContent.toLowerCase() : '';
+                    wrapper.style.display = text.includes(query) ? '' : 'none';
+                });
+            });
+        }
+    }
+
+    // Helper to select/clear visible checkboxes
+    function setupBulkActions(selectAllId, clearAllId, containerId) {
+        const selectAll = document.getElementById(selectAllId);
+        const clearAll = document.getElementById(clearAllId);
+        const container = document.getElementById(containerId);
+        if (selectAll && clearAll && container) {
+            selectAll.addEventListener('click', function(e) {
+                e.preventDefault();
+                const checkboxes = container.querySelectorAll('input[type="checkbox"]');
+                checkboxes.forEach(cb => {
+                    const label = cb.closest('label');
+                    const wrapper = cb.closest('div') || label || cb;
+                    if (wrapper && wrapper.style.display !== 'none') {
+                        cb.checked = true;
+                    }
+                });
+            });
+            clearAll.addEventListener('click', function(e) {
+                e.preventDefault();
+                const checkboxes = container.querySelectorAll('input[type="checkbox"]');
+                checkboxes.forEach(cb => {
+                    const label = cb.closest('label');
+                    const wrapper = cb.closest('div') || label || cb;
+                    if (wrapper && wrapper.style.display !== 'none') {
+                        cb.checked = false;
+                    }
+                });
+            });
+        }
+    }
+
+    // Setup custom attendee filter (combining name search and department filter)
+    const attendeeSearch = document.getElementById('attendee-search');
+    const attendeeDeptFilter = document.getElementById('attendee-dept-filter');
+    const attendeeContainer = document.getElementById('id_attendees');
+
+    if (attendeeSearch && attendeeDeptFilter && attendeeContainer) {
+        // Populate departments filter dropdown dynamically
+        const departments = new Set();
+        Object.values(userDepartments).forEach(depts => {
+            depts.forEach(d => { if (d) departments.add(d); });
+        });
+
+        Array.from(departments).sort().forEach(dept => {
+            const opt = document.createElement('option');
+            opt.value = dept;
+            opt.textContent = dept;
+            opt.style.background = '#1e1b4b';
+            opt.style.color = '#cbd5e1';
+            attendeeDeptFilter.appendChild(opt);
+        });
+
+        function filterAttendees() {
+            const query = attendeeSearch.value.toLowerCase();
+            const selectedDept = attendeeDeptFilter.value;
+            const checkboxes = attendeeContainer.querySelectorAll('input[type="checkbox"]');
+
+            checkboxes.forEach(cb => {
+                const label = cb.closest('label');
+                const wrapper = cb.closest('div') || label || cb;
+                const text = label ? label.textContent.toLowerCase() : '';
+                const userId = cb.value;
+
+                const nameMatch = text.includes(query);
+                
+                let deptMatch = true;
+                if (selectedDept) {
+                    const userDepts = userDepartments[userId] || [];
+                    deptMatch = userDepts.includes(selectedDept);
+                }
+
+                if (nameMatch && deptMatch) {
+                    wrapper.style.display = '';
+                } else {
+                    wrapper.style.display = 'none';
+                }
+            });
+        }
+
+        attendeeSearch.addEventListener('input', filterAttendees);
+        attendeeDeptFilter.addEventListener('change', filterAttendees);
+    }
+
+    // Initialize bulk actions for attendees
+    setupBulkActions('select-all-attendees', 'clear-all-attendees', 'id_attendees');
+
+    // Initialize search and actions for agendas
+    setupFilter('agenda-search', 'id_agenda_issues');
+    setupBulkActions('select-all-agendas', 'clear-all-agendas', 'id_agenda_issues');
+});
+</script>
+{% endblock %}

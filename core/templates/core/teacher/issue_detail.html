@@ -3,7 +3,7 @@
 {% block content %}
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
     <h1 class="page-title" style="margin: 0;">Issue Details</h1>
-    <span class="badge" style="background: rgba(255,255,255,0.15); color:white; font-size: 1rem; padding: 8px 16px;">
+    <span class="badge {% if issue.status in 'FINAL_APPROVED,DEAN_APPROVED,HOD_APPROVED' %}success{% elif issue.status in 'REJECTED,RETURNED,RETURNED_TO_HOD,RETURNED_TO_DEAN' %}danger{% else %}warning{% endif %}" style="font-size: 1rem; padding: 8px 16px;">
         {{ issue.get_status_display }}
     </span>
 </div>
@@ -35,7 +35,13 @@
             </div>
 
             <div style="margin-top: 30px; display:flex; gap:15px; align-items:center;">
-                <button type="submit" name="action" value="submit" class="btn">Submit to HOD</button>
+                {% if request.user.role == 'DEAN' %}
+                    <button type="submit" name="action" value="submit" class="btn">Submit to Rector</button>
+                {% elif request.user.role == 'HOD' %}
+                    <button type="submit" name="action" value="submit" class="btn">Submit to Dean</button>
+                {% else %}
+                    <button type="submit" name="action" value="submit" class="btn">Submit to HOD</button>
+                {% endif %}
                 <button type="submit" name="action" value="draft" class="btn" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);">Update Draft</button>
                 <a href="{% url 'teacher_issues' %}" style="color:#94a3b8; text-decoration:none; font-size:0.9rem; margin-left:10px;">Back</a>
             </div>

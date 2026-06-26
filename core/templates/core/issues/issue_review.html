@@ -1,0 +1,112 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<h1 class="page-title">Review Issue</h1>
+
+<div style="display: grid; grid-template-columns: 2fr 1.2fr; gap: 24px; margin-bottom: 30px; align-items: start;">
+    <!-- Left Column: Issue Details & History -->
+    <div style="display: flex; flex-direction: column; gap: 24px;">
+        <!-- Issue Core Information -->
+        <div class="glass-panel" style="margin-bottom: 0;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 style="color: white; margin: 0; font-size: 1.5rem;">{{ issue.title }}</h2>
+                <span class="badge {% if issue.status in 'FINAL_APPROVED,DEAN_APPROVED,HOD_APPROVED' %}success{% elif issue.status in 'REJECTED,RETURNED,RETURNED_TO_HOD,RETURNED_TO_DEAN' %}danger{% else %}warning{% endif %}" style="font-size: 0.9rem; padding: 6px 12px;">{{ issue.get_status_display }}</span>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; background: rgba(255,255,255,0.02); padding: 15px; border-radius: 8px;">
+                <div>
+                    <span style="display: block; font-size: 0.8rem; color: #94a3b8;">SUBMITTED BY</span>
+                    <strong style="color: white;">{{ issue.created_by.get_full_name|default:issue.created_by.username }}</strong>
+                </div>
+                <div>
+                    <span style="display: block; font-size: 0.8rem; color: #94a3b8;">DEPARTMENT</span>
+                    <strong style="color: white;">{{ issue.department.name }}</strong>
+                </div>
+                <div>
+                    <span style="display: block; font-size: 0.8rem; color: #94a3b8;">FACULTY</span>
+                    <strong style="color: white;">{{ issue.department.faculty.name }}</strong>
+                </div>
+                <div>
+                    <span style="display: block; font-size: 0.8rem; color: #94a3b8;">DATE SUBMITTED</span>
+                    <strong style="color: white;">{{ issue.created_at|date:"M d, Y" }} at {{ issue.created_at|time:"H:i" }}</strong>
+                </div>
+            </div>
+
+            <div style="margin-top: 25px;">
+                <h3 style="color: white; font-size: 1.1rem; margin-top: 0; margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 5px;">Description</h3>
+                <p style="color: #cbd5e1; line-height: 1.6; font-weight: 300; margin: 0; white-space: pre-wrap;">{{ issue.description }}</p>
+            </div>
+        </div>
+
+        <!-- Previous Decision Log / History -->
+        <div class="glass-panel" style="margin-bottom: 0;">
+            <h3 style="color: white; font-size: 1.2rem; margin-top: 0; margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 5px;">Workflow Decision History</h3>
+            
+            {% if decisions %}
+                <div style="display: flex; flex-direction: column; gap: 15px;">
+                    {% for d in decisions %}
+                    <div style="background: rgba(0,0,0,0.15); padding: 15px; border-radius: 10px; border-left: 3px solid #8b5cf6;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <strong style="color: white; font-size: 0.95rem;">
+                                {{ d.decided_by.get_full_name|default:d.decided_by.username }} 
+                                <span style="font-weight: 300; color: #94a3b8;">({{ d.decided_by.get_role_display|default:d.decided_by.role }})</span>
+                            </strong>
+                            <span class="badge {% if d.decision == 'APPROVE' %}success{% elif d.decision == 'REJECT' %}danger{% else %}warning{% endif %}" style="font-size: 0.75rem;">
+                                {{ d.get_decision_display }}
+                            </span>
+                        </div>
+                        <p style="color: #cbd5e1; font-size: 0.9rem; margin: 0; font-weight: 300; line-height: 1.4;">{{ d.notes|default:"No notes provided." }}</p>
+                        <span style="display: block; font-size: 0.75rem; color: #64748b; margin-top: 8px;">{{ d.decided_at|date:"M d, Y" }} at {{ d.decided_at|time:"H:i" }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p style="color: #94a3b8; font-size: 0.85rem; font-weight: 300; margin: 0;">No prior decisions have been made on this issue yet.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Right Column: Record Decision Form or Read-Only Info -->
+    <div class="glass-panel" style="margin-bottom: 0;">
+        {% if can_decide %}
+            <h2 style="margin-top:0; color:white; font-size:1.3rem; margin-bottom: 10px;">Record Your Decision</h2>
+            <p style="color:#94a3b8; font-size: 0.85rem; font-weight:300; margin-bottom: 20px; line-height: 1.4;">
+                Submit your official response. This will update the issue workflow status and automatically notify the creator.
+            </p>
+
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    <label for="{{ form.decision.id_for_label }}">Select Action</label>
+                    {{ form.decision }}
+                    {% if form.decision.errors %}<div style="color:#ef4444; font-size:0.8rem; margin-top:5px;">{{ form.decision.errors.0 }}</div>{% endif %}
+                </div>
+
+                <div class="form-group" style="margin-top: 20px;">
+                    <label for="{{ form.notes.id_for_label }}">Decision / Revision Notes</label>
+                    {{ form.notes }}
+                    {% if form.notes.errors %}<div style="color:#ef4444; font-size:0.8rem; margin-top:5px;">{{ form.notes.errors.0 }}</div>{% endif %}
+                </div>
+
+                <div style="margin-top: 30px;">
+                    <button type="submit" class="btn" style="box-sizing: border-box; width: 100%;">Record & Update</button>
+                    <a href="{% url 'portal_router' %}" class="btn" style="box-sizing: border-box; width: 100%; margin-top: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);">Back to Dashboard</a>
+                </div>
+            </form>
+        {% else %}
+            <h2 style="margin-top:0; color:white; font-size:1.3rem; margin-bottom: 15px;">Workflow Status</h2>
+            <div style="background: rgba(255,255,255,0.02); padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); margin-bottom: 20px;">
+                <span style="display: block; font-size: 0.85rem; color: #94a3b8; margin-bottom: 5px;">CURRENT STATUS</span>
+                <span class="badge {% if issue.status in 'FINAL_APPROVED,DEAN_APPROVED,HOD_APPROVED' %}success{% elif issue.status in 'REJECTED,RETURNED,RETURNED_TO_HOD,RETURNED_TO_DEAN' %}danger{% else %}warning{% endif %}" style="font-size: 0.95rem; padding: 6px 12px; display: inline-block;">
+                    {{ issue.get_status_display }}
+                </span>
+            </div>
+            <p style="color:#94a3b8; font-size: 0.85rem; font-weight:300; line-height: 1.5; margin-bottom: 30px;">
+                This issue is currently outside your pending action items window. You can view its metadata and review history, but cannot submit new decision updates.
+            </p>
+            <a href="{% url 'portal_router' %}" class="btn" style="width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); text-align: center; display: block; box-sizing: border-box;">Back to Dashboard</a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

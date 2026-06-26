@@ -153,6 +153,7 @@ h1.page-title {
 .badge.danger { background: rgba(239, 68, 68, 0.2); color: #f87171; }
 
 .btn {
+    box-sizing: border-box;
     display: inline-flex;
     justify-content: center;
     align-items: center;
@@ -309,4 +310,48 @@ select option {
     text-align: center;
     color: #64748b;
     font-size: 0.85rem;
+}
+
+/* Checkbox List Styling */
+#id_attendees, #id_agenda_issues {
+    padding: 0;
+    margin: 10px 0 0 0;
+    max-height: 200px;
+    overflow-y: auto;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+#id_attendees div, #id_agenda_issues div {
+    padding: 8px 12px;
+    border-radius: 6px;
+    transition: background-color 0.2s ease;
+}
+
+#id_attendees div:hover, #id_agenda_issues div:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+#id_attendees label, #id_agenda_issues label {
+    display: flex;
+    align-items: center;
+    color: #cbd5e1;
+    font-size: 0.95rem;
+    cursor: pointer;
+    font-weight: normal;
+    margin-bottom: 0;
+    width: 100%;
+}
+
+#id_attendees input[type="checkbox"], #id_agenda_issues input[type="checkbox"] {
+    margin-right: 12px;
+    width: 18px;
+    height: 18px;
+    accent-color: #6366f1;
+    cursor: pointer;
 }

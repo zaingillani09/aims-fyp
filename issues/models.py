@@ -45,10 +45,23 @@ class Issue(models.Model):
     def clean(self):
         super().clean()
         if self.created_by_id and self.department_id:
-            if not self.created_by.departments.filter(pk=self.department_id).exists():
-                raise ValidationError({
-                    "department": "You can only submit an issue to a department you belong to."
-                })
+            role = getattr(self.created_by, 'role', None)
+            if role == "DEAN":
+                if self.department.faculty_id != self.created_by.faculty_id:
+                    raise ValidationError({
+                        "department": "As a Dean, you can only submit an issue to a department within your faculty."
+                    })
+            elif role == "HOD":
+                hod_dept = getattr(self.created_by, 'hod_of', None)
+                if hod_dept != self.department and not self.created_by.departments.filter(pk=self.department_id).exists():
+                    raise ValidationError({
+                        "department": "As an HOD, you can only submit an issue to a department you represent or belong to."
+                    })
+            else:
+                if not self.created_by.departments.filter(pk=self.department_id).exists():
+                    raise ValidationError({
+                        "department": "You can only submit an issue to a department you belong to."
+                    })
 
     def save(self, *args, **kwargs):
         # Only run full_clean if we are not in a 'raw' state (like migrations)
@@ -60,13 +73,29 @@ class Issue(models.Model):
         if by_user.id != self.created_by_id:
             raise ValidationError("Only the creator can submit this issue.")
 
-        if self.status not in [self.Status.DRAFT, self.Status.RETURNED]:
-            raise ValidationError("Only DRAFT or RETURNED issues can be submitted.")
+        # Determine which statuses are allowed for submission based on role
+        allowed_statuses = [self.Status.DRAFT, self.Status.RETURNED]
+        if by_user.role == "HOD":
+            allowed_statuses.append(self.Status.RETURNED_TO_HOD)
+        elif by_user.role == "DEAN":
+            allowed_statuses.append(self.Status.RETURNED_TO_DEAN)
 
-        if not self.department.hod_id:
-            raise ValidationError("Cannot submit: this department has no HOD assigned.")
+        if self.status not in allowed_statuses:
+            raise ValidationError("This issue is not in a submittable state.")
 
-        self.status = self.Status.SUBMITTED
+        # Determine next status based on who is submitting
+        if by_user.role == "DEAN":
+            # Dean submits directly to Rector (pending Rector review)
+            self.status = self.Status.DEAN_APPROVED
+        elif by_user.role == "HOD":
+            # HOD submits directly to Dean (pending Faculty Board review)
+            self.status = self.Status.HOD_APPROVED
+        else:
+            # Teacher submits to HOD
+            if not self.department.hod_id:
+                raise ValidationError("Cannot submit: this department has no HOD assigned.")
+            self.status = self.Status.SUBMITTED
+        
         self.save()
 
     def __str__(self):
