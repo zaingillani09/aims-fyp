@@ -3,6 +3,11 @@ from django.db import models
 from django.core.exceptions import ValidationError
 
 
+class ActiveIssueManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().filter(is_active=True)
+
+
 class Issue(models.Model):
     class Status(models.TextChoices):
         DRAFT = "DRAFT", "Draft"
@@ -16,6 +21,10 @@ class Issue(models.Model):
         RETURNED_TO_DEAN = "RETURNED_TO_DEAN", "Returned to Dean for Revision"
 
     title = models.CharField(max_length=200)
+    is_active = models.BooleanField(default=True)
+
+    objects = ActiveIssueManager()
+    all_objects = models.Manager()
     description = models.TextField()
 
     created_by = models.ForeignKey(

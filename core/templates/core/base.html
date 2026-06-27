@@ -113,7 +113,10 @@
                 {% endif %}
                 
                 <div class="notification-dropdown" id="notifDropdown">
-                    <h4 style="margin: 0; padding: 15px; color: white; border-bottom: 1px solid rgba(255,255,255,0.1);">Notifications</h4>
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding: 12px 15px;" id="notifHeaderWrapper">
+                        <h4 style="margin: 0; color: white; font-size: 0.95rem;">Notifications</h4>
+                        <a href="#" id="markAllReadWebSocket" style="font-size: 0.75rem; color: #60a5fa; text-decoration: none; font-weight: 500;">Mark all read</a>
+                    </div>
                     {% if latest_notifications %}
                         {% for notif in latest_notifications %}
                             <a href="{% url 'mark_notification_read' notif.pk %}" class="notification-item">
@@ -169,6 +172,20 @@
             function connect() {
                 socket = new WebSocket(wsUrl);
                 
+                // Bind click event for "Mark all read" link
+                const markAllReadBtn = document.getElementById('markAllReadWebSocket');
+                if (markAllReadBtn) {
+                    markAllReadBtn.replaceWith(markAllReadBtn.cloneNode(true));
+                    document.getElementById('markAllReadWebSocket').addEventListener('click', function(e) {
+                        e.preventDefault();
+                        if (socket && socket.readyState === WebSocket.OPEN) {
+                            socket.send(JSON.stringify({
+                                "action": "mark_all_read"
+                            }));
+                        }
+                    });
+                }
+
                 socket.onmessage = function(e) {
                     try {
                         const data = JSON.parse(e.data);
@@ -201,7 +218,7 @@
                                 if (emptyMsg) {
                                     emptyMsg.remove();
                                 }
-                                const header = dropdown.querySelector('h4');
+                                const header = dropdown.querySelector('#notifHeaderWrapper') || dropdown.querySelector('h4');
                                 // Prepend in reverse order so latest is at the top
                                 data.latest_notifications.slice().reverse().forEach(notif => {
                                     const notifItem = document.createElement('a');
@@ -218,7 +235,7 @@
                                     const emptyDiv = document.createElement('div');
                                     emptyDiv.className = 'notification-empty';
                                     emptyDiv.textContent = 'No new notifications';
-                                    const header = dropdown.querySelector('h4');
+                                    const header = dropdown.querySelector('#notifHeaderWrapper') || dropdown.querySelector('h4');
                                     header.insertAdjacentElement('afterend', emptyDiv);
                                 }
                             }
@@ -250,7 +267,7 @@
                                 <div style="font-size: 0.7rem; color: #64748b; margin-top: 5px;">${data.created_at}</div>
                             `;
                             
-                            const header = dropdown.querySelector('h4');
+                            const header = dropdown.querySelector('#notifHeaderWrapper') || dropdown.querySelector('h4');
                             header.insertAdjacentElement('afterend', notifItem);
                             
                             // Keep max 5 notifications in dropdown

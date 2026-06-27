@@ -57,3 +57,31 @@ class NotificationConsumer(AsyncWebsocketConsumer):
             "link": notification["link"],
             "created_at": notification["created_at"]
         }))
+
+    async def receive(self, text_data):
+        try:
+            data = json.loads(text_data)
+            action = data.get("action")
+            if action == "mark_all_read":
+                await self.mark_notifications_read(self.user)
+                # Broadcast status to all open tabs for this user
+                await self.channel_layer.group_send(
+                    self.group_name,
+                    {
+                        "type": "sync_read_status"
+                    }
+                )
+        except Exception as e:
+            print("Error parsing socket command:", e)
+
+    @database_sync_to_async
+    def mark_notifications_read(self, user):
+        user.notifications.filter(is_read=False).update(is_read=True)
+
+    async def sync_read_status(self, event):
+        # Notify the client tab to reset unread counts to 0 and empty list
+        await self.send(text_data=json.dumps({
+            "type": "sync_notifications",
+            "unread_count": 0,
+            "latest_notifications": []
+        }))

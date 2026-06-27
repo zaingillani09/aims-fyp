@@ -232,6 +232,21 @@ def teacher_issue_detail(request, pk):
         editable = True
 
     if request.method == 'POST' and editable:
+        if request.POST.get('action') == 'delete':
+            issue.is_active = False
+            issue.save()
+            from issues.models import IssueHistory
+            IssueHistory.objects.create(
+                issue=issue,
+                actor=request.user,
+                action="Draft Discarded",
+                old_status=issue.status,
+                new_status=issue.status,
+                notes="Draft issue was discarded by creator."
+            )
+            messages.success(request, "Draft issue has been successfully discarded.")
+            return redirect('teacher_issues')
+
         form = IssueSubmitForm(request.POST, instance=issue, user=request.user)
         if form.is_valid():
             form.save()
@@ -464,4 +479,52 @@ def mark_all_notifications_read(request):
         request.user.notifications.filter(is_read=False).update(is_read=True)
         messages.success(request, "All notifications marked as read.")
     return redirect('notifications_list')
+
+
+from django.http import JsonResponse
+from django.db.models import Q
+
+@login_required
+def search_attendees(request):
+    query = request.GET.get('q', '').strip()
+    meeting_type = request.GET.get('meeting_type', 'BOS')
+    
+    from accounts.models import User
+    
+    if meeting_type == 'BOS':
+        dept = getattr(request.user, 'hod_of', None)
+        if dept:
+            queryset = dept.members.all()
+        else:
+            queryset = User.objects.none()
+    elif meeting_type == 'BOF':
+        faculty = getattr(request.user, 'dean_of', None)
+        if faculty:
+            queryset = User.objects.filter(
+                Q(faculty=faculty) | Q(role=User.Role.HOD)
+            ).distinct()
+        else:
+            queryset = User.objects.none()
+    else: # DCM
+        queryset = User.objects.filter(role=User.Role.DEAN)
+        
+    if query:
+        queryset = queryset.filter(
+            Q(first_name__icontains=query) | 
+            Q(last_name__icontains=query) | 
+            Q(username__icontains=query)
+        )
+        
+    results = []
+    for u in queryset[:20]:
+        dept_name = u.primary_department.name if u.primary_department else ""
+        role_display = u.get_role_display() if hasattr(u, 'get_role_display') else u.role
+        results.append({
+            "id": u.id,
+            "name": u.get_full_name() or u.username,
+            "username": u.username,
+            "role": role_display,
+            "department": dept_name
+        })
+    return JsonResponse({"results": results})
 

@@ -66,38 +66,65 @@ class MeetingForm(forms.ModelForm):
             self.instance.organizer = self.user
             self.instance.meeting_type = self.meeting_type
             
+            # Dynamically filter attendees query set based on state to prevent heavy GET load
+            if self.is_bound:
+                if hasattr(self.data, 'getlist'):
+                    selected_ids = self.data.getlist('attendees')
+                else:
+                    selected_ids = self.data.get('attendees', [])
+                    if not isinstance(selected_ids, list):
+                        selected_ids = [selected_ids]
+                self.fields['attendees'].queryset = User.objects.filter(id__in=selected_ids)
+            else:
+                if self.instance.pk:
+                    self.fields['attendees'].queryset = self.instance.attendees.all()
+                else:
+                    self.fields['attendees'].queryset = User.objects.none()
+
+            # Filter agenda issues
             if self.meeting_type == 'BOS':
-                # HOD -> BOS
                 dept = getattr(self.user, 'hod_of', None)
                 if dept:
                     self.instance.department = dept
-                    # Filter attendees to department members
-                    self.fields['attendees'].queryset = dept.members.all()
-                    # Filter agenda issues to department's active submitted issues
                     self.fields['agenda_issues'].queryset = Issue.objects.filter(
                         department=dept,
                         status__in=['SUBMITTED', 'RETURNED_TO_HOD']
                     )
             elif self.meeting_type == 'BOF':
-                # Dean -> BOF
                 faculty = getattr(self.user, 'dean_of', None)
                 if faculty:
                     self.instance.faculty = faculty
-                    # Filter attendees to faculty users OR HODs across all departments
-                    self.fields['attendees'].queryset = User.objects.filter(
-                        models.Q(faculty=faculty) | models.Q(role=User.Role.HOD)
-                    ).distinct()
-                    # Filter agenda issues to faculty's active HOD_APPROVED or RETURNED_TO_DEAN issues
                     self.fields['agenda_issues'].queryset = Issue.objects.filter(
                         department__faculty=faculty,
                         status__in=['HOD_APPROVED', 'RETURNED_TO_DEAN']
                     )
             elif self.meeting_type == 'DCM':
-                # Rector -> DCM
-                # Attendees: all Deans
-                self.fields['attendees'].queryset = User.objects.filter(role=User.Role.DEAN)
-                # Agenda Issues: escalated to Rector (status='DEAN_APPROVED')
                 self.fields['agenda_issues'].queryset = Issue.objects.filter(status='DEAN_APPROVED')
+
+    def clean_attendees(self):
+        attendees = self.cleaned_data.get('attendees') or []
+        from accounts.models import User
+        
+        if self.meeting_type == 'BOS':
+            dept = getattr(self.user, 'hod_of', None)
+            if dept:
+                for a in attendees:
+                    if not dept.members.filter(id=a.id).exists():
+                        raise forms.ValidationError(f"{a.get_full_name() or a.username} is not a member of this department.")
+        elif self.meeting_type == 'BOF':
+            faculty = getattr(self.user, 'dean_of', None)
+            if faculty:
+                from django.db.models import Q
+                for a in attendees:
+                    is_faculty_member = a.faculty_id == faculty.id
+                    is_hod = a.role == User.Role.HOD
+                    if not (is_faculty_member or is_hod):
+                        raise forms.ValidationError(f"{a.get_full_name() or a.username} is not authorized for this faculty board.")
+        elif self.meeting_type == 'DCM':
+            for a in attendees:
+                if a.role != User.Role.DEAN:
+                    raise forms.ValidationError(f"{a.get_full_name() or a.username} is not a Dean.")
+        return attendees
 
 class ConcludeMeetingForm(forms.ModelForm):
     minutes_attachment = forms.FileField(

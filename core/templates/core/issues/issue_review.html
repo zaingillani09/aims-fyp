@@ -66,6 +66,7 @@
         border-radius: 10px;
         padding: 12px 16px;
         margin-left: 10px;
+        position: relative;
     }
     
     .timeline-content h4 {
@@ -79,16 +80,43 @@
         font-size: 0.75rem;
         color: #94a3b8;
     }
-    
-    .timeline-content .notes {
-        font-size: 0.85rem;
+
+    .timeline-notes-tooltip {
+        position: absolute;
+        bottom: 105%;
+        left: 50%;
+        transform: translateX(-50%) translateY(5px);
+        background: #1e1b4b;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 8px;
+        padding: 10px 14px;
         color: #cbd5e1;
-        margin: 8px 0 0 0;
-        font-weight: 300;
-        line-height: 1.4;
-        background: rgba(0, 0, 0, 0.2);
-        padding: 8px 12px;
-        border-radius: 6px;
+        font-size: 0.85rem;
+        width: 260px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+        z-index: 100;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s ease, transform 0.2s ease;
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+    }
+    
+    .timeline-notes-hover-trigger:hover .timeline-notes-tooltip {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+        pointer-events: auto;
+    }
+    
+    .timeline-notes-tooltip::after {
+        content: "";
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        border-width: 6px;
+        border-style: solid;
+        border-color: #1e1b4b transparent transparent transparent;
     }
 </style>
 <h1 class="page-title">Review Issue</h1>
@@ -145,7 +173,13 @@
                                     • {{ item.created_at|date:"M d, Y" }} at {{ item.created_at|time:"H:i" }}
                                 </div>
                                 {% if item.notes %}
-                                    <p class="notes">{{ item.notes }}</p>
+                                    <div class="timeline-notes-hover-trigger" style="margin-top: 8px; display: inline-flex; align-items: center; gap: 6px; color: #a5b4fc; font-size: 0.8rem; cursor: help; position: relative;">
+                                        <span>📝</span> Hover to read notes
+                                        <div class="timeline-notes-tooltip">
+                                            <strong style="color: white; display: block; margin-bottom: 4px; font-size: 0.8rem; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 3px;">Decision / Action Notes:</strong>
+                                            {{ item.notes }}
+                                        </div>
+                                    </div>
                                 {% endif %}
                             </div>
                         </div>
