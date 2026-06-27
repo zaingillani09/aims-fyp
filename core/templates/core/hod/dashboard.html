@@ -14,6 +14,20 @@
     </div>
 </div>
 
+<!-- Department Insights Section -->
+<div class="glass-panel" style="margin-bottom: 30px; padding: 25px;">
+    <h3 style="margin-top:0; color:white; font-size:1.3rem; margin-bottom: 8px;">Department Insights</h3>
+    <p style="color:#94a3b8; font-weight:300; margin-top:0; margin-bottom: 25px; font-size: 0.9rem;">Visual status distribution of academic issues in your department</p>
+    <div style="display: flex; justify-content: center; align-items: center; width: 100%; min-height: 220px;">
+        <div id="chart-no-data" style="display: none; color: #64748b; font-size: 1rem; text-align: center; padding: 40px 0;">
+            📊 No issues have been registered in this department yet to generate visual insights.
+        </div>
+        <div id="chart-container" style="position: relative; height: 260px; width: 100%; max-width: 450px;">
+            <canvas id="statusChart"></canvas>
+        </div>
+    </div>
+</div>
+
 <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-bottom: 30px;">
     <!-- Pending Issues List -->
     <div class="glass-panel" style="margin-bottom: 0;">
@@ -132,4 +146,93 @@
     </div>
     {% endif %}
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const labels = {{ chart_status_labels|safe }};
+    const values = {{ chart_status_values|safe }};
+
+    if (labels.length === 0) {
+        document.getElementById('chart-no-data').style.display = 'block';
+        document.getElementById('chart-container').style.display = 'none';
+        return;
+    }
+
+    const ctx = document.getElementById('statusChart').getContext('2d');
+    
+    // Status colors mapping
+    const statusColors = {
+        'Draft': 'rgba(148, 163, 184, 0.65)',
+        'Submitted to HOD': 'rgba(99, 102, 241, 0.65)',
+        'HOD Approved (Pending Faculty Board)': 'rgba(59, 130, 246, 0.65)',
+        'Dean Approved (Pending Deans Committee)': 'rgba(6, 182, 212, 0.65)',
+        'Final Approval (Rector)': 'rgba(16, 185, 129, 0.65)',
+        'Rejected': 'rgba(244, 63, 94, 0.65)',
+        'Returned for Revision': 'rgba(245, 158, 11, 0.65)',
+        'Returned to HOD for Revision': 'rgba(234, 88, 12, 0.65)',
+        'Returned to Dean for Revision': 'rgba(220, 38, 38, 0.65)'
+    };
+
+    const statusBorderColors = {
+        'Draft': '#94a3b8',
+        'Submitted to HOD': '#6366f1',
+        'HOD Approved (Pending Faculty Board)': '#3b82f6',
+        'Dean Approved (Pending Deans Committee)': '#06b6d4',
+        'Final Approval (Rector)': '#10b881',
+        'Rejected': '#f43f5e',
+        'Returned for Revision': '#f59e0b',
+        'Returned to HOD for Revision': '#ea580c',
+        'Returned to Dean for Revision': '#dc2626'
+    };
+
+    const bgColors = labels.map(label => statusColors[label] || 'rgba(99, 102, 241, 0.65)');
+    const borderColors = labels.map(label => statusBorderColors[label] || '#6366f1');
+
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: values,
+                backgroundColor: bgColors,
+                borderColor: borderColors,
+                borderWidth: 1.5,
+                hoverOffset: 12
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'right',
+                    labels: {
+                        color: '#cbd5e1',
+                        font: {
+                            family: 'Inter',
+                            size: 11
+                        },
+                        padding: 15
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                    titleColor: '#fff',
+                    bodyColor: '#cbd5e1',
+                    borderColor: 'rgba(255,255,255,0.1)',
+                    borderWidth: 1,
+                    titleFont: {
+                        family: 'Inter',
+                        weight: 'bold'
+                    },
+                    bodyFont: {
+                        family: 'Inter'
+                    }
+                }
+            },
+            cutout: '65%'
+        }
+    });
+});
+</script>
 {% endblock %}

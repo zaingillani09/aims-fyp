@@ -55,6 +55,11 @@ def hod_dashboard(request):
     scheduled_meetings = Meeting.objects.filter(department=dept, status='SCHEDULED').order_by('date', 'time')
     past_meetings = Meeting.objects.filter(department=dept, status__in=['CONCLUDED', 'CANCELLED']).order_by('-date', '-time')
 
+    from django.db.models import Count
+    status_data = Issue.objects.filter(department=dept).exclude(status='DRAFT').values('status').annotate(count=Count('id'))
+    chart_status_labels = [Issue.Status(item['status']).label for item in status_data]
+    chart_status_values = [item['count'] for item in status_data]
+
     context = {
         'department': dept,
         'pending_issues_count': pending_issues.count(),
@@ -63,6 +68,8 @@ def hod_dashboard(request):
         'all_issues': all_issues,
         'scheduled_meetings': scheduled_meetings,
         'past_meetings': past_meetings,
+        'chart_status_labels': chart_status_labels,
+        'chart_status_values': chart_status_values,
     }
     return render(request, 'core/hod/dashboard.html', context)
 
@@ -88,6 +95,11 @@ def dean_dashboard(request):
     scheduled_meetings = Meeting.objects.filter(faculty=faculty, status='SCHEDULED').order_by('date', 'time')
     past_meetings = Meeting.objects.filter(faculty=faculty, status__in=['CONCLUDED', 'CANCELLED']).order_by('-date', '-time')
 
+    from django.db.models import Count
+    dept_data = Issue.objects.filter(department__faculty=faculty).exclude(status='DRAFT').values('department__name').annotate(count=Count('id'))
+    chart_dept_labels = [item['department__name'] for item in dept_data]
+    chart_dept_values = [item['count'] for item in dept_data]
+
     context = {
         'faculty': faculty,
         'pending_issues_count': pending_issues.count(),
@@ -96,6 +108,8 @@ def dean_dashboard(request):
         'all_issues': all_issues,
         'scheduled_meetings': scheduled_meetings,
         'past_meetings': past_meetings,
+        'chart_dept_labels': chart_dept_labels,
+        'chart_dept_values': chart_dept_values,
     }
     return render(request, 'core/dean/dashboard.html', context)
 
@@ -330,6 +344,17 @@ def rector_dashboard(request):
         status__in=[Meeting.Status.CONCLUDED, Meeting.Status.CANCELLED]
     ).order_by('-date', '-time')
 
+    from django.db.models import Count
+    # Issues by Faculty
+    faculty_data = Issue.objects.exclude(status='DRAFT').values('department__faculty__name').annotate(count=Count('id'))
+    chart_faculty_labels = [item['department__faculty__name'] for item in faculty_data]
+    chart_faculty_values = [item['count'] for item in faculty_data]
+    
+    # Issues by Status (Global)
+    status_data = Issue.objects.exclude(status='DRAFT').values('status').annotate(count=Count('id'))
+    chart_status_labels = [Issue.Status(item['status']).label for item in status_data]
+    chart_status_values = [item['count'] for item in status_data]
+
     context = {
         'pending_issues_count': pending_issues.count(),
         'finalized_issues_count': finalized_issues.count(),
@@ -337,6 +362,10 @@ def rector_dashboard(request):
         'finalized_issues': finalized_issues,
         'scheduled_meetings': scheduled_meetings,
         'past_meetings': past_meetings,
+        'chart_faculty_labels': chart_faculty_labels,
+        'chart_faculty_values': chart_faculty_values,
+        'chart_status_labels': chart_status_labels,
+        'chart_status_values': chart_status_values,
     }
     return render(request, 'core/rector/dashboard.html', context)
 

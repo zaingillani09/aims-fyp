@@ -14,6 +14,20 @@
     </div>
 </div>
 
+<!-- Faculty Insights Section -->
+<div class="glass-panel" style="margin-bottom: 30px; padding: 25px;">
+    <h3 style="margin-top:0; color:white; font-size:1.3rem; margin-bottom: 8px;">Faculty Insights</h3>
+    <p style="color:#94a3b8; font-weight:300; margin-top:0; margin-bottom: 25px; font-size: 0.9rem;">Distribution of academic issues by department in your faculty</p>
+    <div style="display: flex; justify-content: center; align-items: center; width: 100%; min-height: 220px;">
+        <div id="chart-no-data" style="display: none; color: #64748b; font-size: 1rem; text-align: center; padding: 40px 0;">
+            📊 No issues have been registered in this faculty yet to generate visual insights.
+        </div>
+        <div id="chart-container" style="position: relative; height: 260px; width: 100%; max-width: 600px;">
+            <canvas id="deptChart"></canvas>
+        </div>
+    </div>
+</div>
+
 <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-bottom: 30px;">
     <!-- Pending Issues List -->
     <div class="glass-panel" style="margin-bottom: 0;">
@@ -134,4 +148,89 @@
     </div>
     {% endif %}
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const labels = {{ chart_dept_labels|safe }};
+    const values = {{ chart_dept_values|safe }};
+
+    if (labels.length === 0) {
+        document.getElementById('chart-no-data').style.display = 'block';
+        document.getElementById('chart-container').style.display = 'none';
+        return;
+    }
+
+    const ctx = document.getElementById('deptChart').getContext('2d');
+    
+    // Bar coloring using indigo/violet tones
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Issues Submitted',
+                data: values,
+                backgroundColor: 'rgba(99, 102, 241, 0.65)',
+                borderColor: '#6366f1',
+                borderWidth: 1.5,
+                borderRadius: 6,
+                barPercentage: 0.5
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                    titleColor: '#fff',
+                    bodyColor: '#cbd5e1',
+                    borderColor: 'rgba(255,255,255,0.1)',
+                    borderWidth: 1,
+                    titleFont: {
+                        family: 'Inter',
+                        weight: 'bold'
+                    },
+                    bodyFont: {
+                        family: 'Inter'
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.05)',
+                        borderColor: 'rgba(255, 255, 255, 0.1)'
+                    },
+                    ticks: {
+                        color: '#94a3b8',
+                        font: {
+                            family: 'Inter',
+                            size: 11
+                        }
+                    }
+                },
+                y: {
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.05)',
+                        borderColor: 'rgba(255, 255, 255, 0.1)'
+                    },
+                    ticks: {
+                        color: '#94a3b8',
+                        font: {
+                            family: 'Inter',
+                            size: 11
+                        },
+                        stepSize: 1,
+                        precision: 0
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
 {% endblock %}
