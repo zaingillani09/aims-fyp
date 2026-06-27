@@ -7,6 +7,46 @@
     <title>AIMS Portal</title>
     <link rel="stylesheet" href="{% static 'css/portal.css' %}?v=1.4">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Premium Glassmorphic Toast Container */
+        #toast-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none;
+        }
+        
+        .glass-toast {
+            pointer-events: auto;
+            text-decoration: none;
+            color: white;
+            padding: 16px 20px;
+            border-radius: 12px;
+            background: rgba(30, 27, 75, 0.85); /* Deep indigo/violet */
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transform: translateX(120%);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s;
+            max-width: 350px;
+            cursor: pointer;
+            opacity: 1;
+        }
+        
+        .glass-toast:hover {
+            background: rgba(49, 46, 129, 0.9);
+            border-color: rgba(255, 255, 255, 0.25);
+            transform: scale(1.02);
+        }
+    </style>
 </head>
 <body>
 
@@ -116,6 +156,121 @@
         {% block content %}
         {% endblock %}
     </div>
+
+    {% if request.user.is_authenticated %}
+    <script>
+        // Establish real-time notifications WebSocket
+        (function() {
+            const wsProtocol = window.location.protocol === "https:" ? "wss://" : "ws://";
+            const wsUrl = wsProtocol + window.location.host + "/ws/notifications/";
+            
+            let socket = null;
+            
+            function connect() {
+                socket = new WebSocket(wsUrl);
+                
+                socket.onmessage = function(e) {
+                    try {
+                        const data = JSON.parse(e.data);
+                        
+                        // 1. Update Notification Badge
+                        let badge = document.querySelector('.notification-badge');
+                        let bell = document.getElementById('bellIcon');
+                        if (!badge) {
+                            badge = document.createElement('span');
+                            badge.className = 'notification-badge';
+                            // Insert the badge right after the text (bell emoji 🔔) but before dropdown
+                            const dropdown = document.getElementById('notifDropdown');
+                            bell.insertBefore(badge, dropdown);
+                        }
+                        let count = parseInt(badge.textContent || "0");
+                        badge.textContent = count + 1;
+                        
+                        // 2. Prepend item to dropdown
+                        const dropdown = document.getElementById('notifDropdown');
+                        const emptyMsg = dropdown.querySelector('.notification-empty');
+                        if (emptyMsg) {
+                            emptyMsg.remove();
+                        }
+                        
+                        const notifItem = document.createElement('a');
+                        notifItem.href = data.link || "#";
+                        notifItem.className = 'notification-item';
+                        notifItem.innerHTML = `
+                            ${data.message}
+                            <div style="font-size: 0.7rem; color: #64748b; margin-top: 5px;">${data.created_at}</div>
+                        `;
+                        
+                        // Insert right after dropdown title (h4)
+                        const header = dropdown.querySelector('h4');
+                        header.insertAdjacentElement('afterend', notifItem);
+                        
+                        // Keep max 5 notifications in dropdown
+                        const items = dropdown.querySelectorAll('.notification-item');
+                        if (items.length > 5) {
+                            items[items.length - 1].remove();
+                        }
+                        
+                        // 3. Trigger glassmorphic toast notification
+                        showToastNotification(data.message, data.link);
+                        
+                    } catch (err) {
+                        console.error("Error handling notification message:", err);
+                    }
+                };
+                
+                socket.onclose = function(e) {
+                    console.log("WebSocket closed, attempting reconnect in 5 seconds...", e.reason);
+                    setTimeout(connect, 5000);
+                };
+                
+                socket.onerror = function(err) {
+                    console.error("WebSocket encountered error: ", err.message, "Closing socket.");
+                    socket.close();
+                };
+            }
+            
+            function showToastNotification(message, link) {
+                let container = document.getElementById('toast-container');
+                if (!container) {
+                    container = document.createElement('div');
+                    container.id = 'toast-container';
+                    document.body.appendChild(container);
+                }
+                
+                const toast = document.createElement('a');
+                toast.href = link || "#";
+                toast.className = 'glass-toast';
+                toast.innerHTML = `
+                    <span style="font-size: 1.5rem;">🔔</span>
+                    <div>
+                        <div style="font-weight: 600; font-size: 0.9rem; color: #a5b4fc; margin-bottom: 2px;">New Notification</div>
+                        <div style="font-size: 0.8rem; color: #cbd5e1; line-height: 1.3;">${message}</div>
+                    </div>
+                `;
+                
+                container.appendChild(toast);
+                
+                // Slide in
+                setTimeout(() => {
+                    toast.style.transform = 'translateX(0)';
+                }, 50);
+                
+                // Auto fade and slide out
+                setTimeout(() => {
+                    toast.style.transform = 'translateX(120%)';
+                    toast.style.opacity = '0';
+                    setTimeout(() => {
+                        toast.remove();
+                    }, 400);
+                }, 5000);
+            }
+            
+            // Start connection
+            connect();
+        })();
+    </script>
+    {% endif %}
 
 </body>
 </html>
