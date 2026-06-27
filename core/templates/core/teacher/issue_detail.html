@@ -1,6 +1,96 @@
 {% extends 'core/base.html' %}
 
 {% block content %}
+<style>
+    /* Vertical Timeline styling */
+    .timeline-container {
+        position: relative;
+        padding-left: 24px;
+        margin-top: 15px;
+    }
+    
+    .timeline-container::before {
+        content: '';
+        position: absolute;
+        left: 5px;
+        top: 8px;
+        bottom: 8px;
+        width: 2px;
+        background: rgba(255, 255, 255, 0.1);
+    }
+    
+    .timeline-item {
+        position: relative;
+        margin-bottom: 24px;
+    }
+    
+    .timeline-item:last-child {
+        margin-bottom: 0;
+    }
+    
+    .timeline-badge {
+        position: absolute;
+        left: -24px;
+        top: 6px;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #64748b;
+        border: 2px solid #0f172a;
+        box-sizing: border-box;
+    }
+    
+    .timeline-badge.success {
+        background: #10b981;
+        box-shadow: 0 0 8px #10b981;
+    }
+    
+    .timeline-badge.danger {
+        background: #ef4444;
+        box-shadow: 0 0 8px #ef4444;
+    }
+    
+    .timeline-badge.info {
+        background: #3b82f6;
+        box-shadow: 0 0 8px #3b82f6;
+    }
+    
+    .timeline-badge.warning {
+        background: #f59e0b;
+        box-shadow: 0 0 8px #f59e0b;
+    }
+    
+    .timeline-content {
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 10px;
+        padding: 12px 16px;
+        margin-left: 10px;
+    }
+    
+    .timeline-content h4 {
+        margin: 0 0 4px 0;
+        color: white;
+        font-size: 0.95rem;
+        font-weight: 500;
+    }
+    
+    .timeline-content .meta {
+        font-size: 0.75rem;
+        color: #94a3b8;
+    }
+    
+    .timeline-content .notes {
+        font-size: 0.85rem;
+        color: #cbd5e1;
+        margin: 8px 0 0 0;
+        font-weight: 300;
+        line-height: 1.4;
+        background: rgba(0, 0, 0, 0.2);
+        padding: 8px 12px;
+        border-radius: 6px;
+    }
+</style>
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
     <h1 class="page-title" style="margin: 0;">Issue Details</h1>
     <span class="badge {% if issue.status in 'FINAL_APPROVED,DEAN_APPROVED,HOD_APPROVED' %}success{% elif issue.status in 'REJECTED,RETURNED,RETURNED_TO_HOD,RETURNED_TO_DEAN' %}danger{% else %}warning{% endif %}" style="font-size: 1rem; padding: 8px 16px;">
@@ -89,6 +179,32 @@
         <div style="margin-top: 30px;">
             <a href="{% url 'teacher_issues' %}" class="btn" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);">Back to List</a>
         </div>
+    {% endif %}
+</div>
+
+<div class="glass-panel" style="max-width: 600px; margin-top: 24px;">
+    <h3 style="color: white; font-size: 1.2rem; margin-top: 0; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 8px;">Issue Activity History</h3>
+    {% if history %}
+        <div class="timeline-container">
+            {% for item in history %}
+                <div class="timeline-item">
+                    <div class="timeline-badge {% if item.new_status in 'FINAL_APPROVED,DEAN_APPROVED,HOD_APPROVED' %}success{% elif item.new_status in 'REJECTED,RETURNED,RETURNED_TO_HOD,RETURNED_TO_DEAN' %}danger{% elif item.new_status == 'SUBMITTED' %}info{% else %}warning{% endif %}"></div>
+                    <div class="timeline-content">
+                        <h4>{{ item.action }}</h4>
+                        <div class="meta">
+                            by <strong>{{ item.actor.get_full_name|default:item.actor.username }}</strong> 
+                            ({{ item.actor.get_role_display|default:item.actor.role }}) 
+                            • {{ item.created_at|date:"M d, Y" }} at {{ item.created_at|time:"H:i" }}
+                        </div>
+                        {% if item.notes %}
+                            <p class="notes">{{ item.notes }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p style="color: #94a3b8; font-size: 0.85rem; font-weight: 300; margin: 0;">No activity logged yet.</p>
     {% endif %}
 </div>
 {% endblock %}

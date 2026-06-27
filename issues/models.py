@@ -64,10 +64,21 @@ class Issue(models.Model):
                     })
 
     def save(self, *args, **kwargs):
+        is_new = self.pk is None
+        is_raw = kwargs.get('raw', False)
         # Only run full_clean if we are not in a 'raw' state (like migrations)
-        if not kwargs.get('raw', False):
+        if not is_raw:
             self.full_clean()
-        return super().save(*args, **kwargs)
+        result = super().save(*args, **kwargs)
+        if is_new and not is_raw:
+            IssueHistory.objects.create(
+                issue=self,
+                actor=self.created_by,
+                action="Created Draft",
+                new_status=self.status,
+                notes="Issue drafted."
+            )
+        return result
 
     def submit(self, by_user):
         if by_user.id != self.created_by_id:
@@ -83,20 +94,36 @@ class Issue(models.Model):
         if self.status not in allowed_statuses:
             raise ValidationError("This issue is not in a submittable state.")
 
+        old_status = self.status
+
         # Determine next status based on who is submitting
         if by_user.role == "DEAN":
             # Dean submits directly to Rector (pending Rector review)
             self.status = self.Status.DEAN_APPROVED
+            target_role = "Rector"
         elif by_user.role == "HOD":
             # HOD submits directly to Dean (pending Faculty Board review)
             self.status = self.Status.HOD_APPROVED
+            target_role = "Dean"
         else:
             # Teacher submits to HOD
             if not self.department.hod_id:
                 raise ValidationError("Cannot submit: this department has no HOD assigned.")
             self.status = self.Status.SUBMITTED
+            target_role = "HOD"
         
         self.save()
+
+        # Log submission history
+        role_label = by_user.get_role_display() if hasattr(by_user, 'get_role_display') else by_user.role
+        IssueHistory.objects.create(
+            issue=self,
+            actor=by_user,
+            action=f"Submitted to {target_role}",
+            old_status=old_status,
+            new_status=self.status,
+            notes=f"Issue submitted for review by {role_label}."
+        )
 
     def __str__(self):
         return f"{self.title} [{self.get_status_display()}]"
@@ -159,6 +186,7 @@ class IssueDecision(models.Model):
     def save(self, *args, **kwargs):
         self.full_clean()
         
+        old_status = self.issue.status
         # Save the decision record
         result = super().save(*args, **kwargs)
 
@@ -197,8 +225,46 @@ class IssueDecision(models.Model):
             self.issue.rector_notes = self.notes
             self.issue.save(update_fields=['status', 'rector_notes'])
 
+        # Log decision history
+        decision_label = self.get_decision_display()
+        action_name = f"{role} Decision: {decision_label}"
+        IssueHistory.objects.create(
+            issue=self.issue,
+            actor=self.decided_by,
+            action=action_name,
+            old_status=old_status,
+            new_status=self.issue.status,
+            notes=self.notes
+        )
+
         return result
 
     def __str__(self):
         role = self.decided_by.role if hasattr(self, 'decided_by') and self.decided_by else "Unknown"
         return f"{role} Decision: {self.issue.title} - {self.decision}"
+
+
+class IssueHistory(models.Model):
+    issue = models.ForeignKey(
+        Issue,
+        on_delete=models.CASCADE,
+        related_name="history"
+    )
+    actor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="issue_history_actions"
+    )
+    action = models.CharField(max_length=100)
+    old_status = models.CharField(max_length=20, blank=True, null=True)
+    new_status = models.CharField(max_length=20, blank=True, null=True)
+    notes = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['created_at']
+
+    def __str__(self):
+        return f"{self.issue.title} - {self.action} by {self.actor.username if self.actor else 'System'} at {self.created_at}"

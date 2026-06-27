@@ -1,6 +1,96 @@
 {% extends 'core/base.html' %}
 
 {% block content %}
+<style>
+    /* Vertical Timeline styling */
+    .timeline-container {
+        position: relative;
+        padding-left: 24px;
+        margin-top: 15px;
+    }
+    
+    .timeline-container::before {
+        content: '';
+        position: absolute;
+        left: 5px;
+        top: 8px;
+        bottom: 8px;
+        width: 2px;
+        background: rgba(255, 255, 255, 0.1);
+    }
+    
+    .timeline-item {
+        position: relative;
+        margin-bottom: 24px;
+    }
+    
+    .timeline-item:last-child {
+        margin-bottom: 0;
+    }
+    
+    .timeline-badge {
+        position: absolute;
+        left: -24px;
+        top: 6px;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #64748b;
+        border: 2px solid #0f172a;
+        box-sizing: border-box;
+    }
+    
+    .timeline-badge.success {
+        background: #10b981;
+        box-shadow: 0 0 8px #10b981;
+    }
+    
+    .timeline-badge.danger {
+        background: #ef4444;
+        box-shadow: 0 0 8px #ef4444;
+    }
+    
+    .timeline-badge.info {
+        background: #3b82f6;
+        box-shadow: 0 0 8px #3b82f6;
+    }
+    
+    .timeline-badge.warning {
+        background: #f59e0b;
+        box-shadow: 0 0 8px #f59e0b;
+    }
+    
+    .timeline-content {
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 10px;
+        padding: 12px 16px;
+        margin-left: 10px;
+    }
+    
+    .timeline-content h4 {
+        margin: 0 0 4px 0;
+        color: white;
+        font-size: 0.95rem;
+        font-weight: 500;
+    }
+    
+    .timeline-content .meta {
+        font-size: 0.75rem;
+        color: #94a3b8;
+    }
+    
+    .timeline-content .notes {
+        font-size: 0.85rem;
+        color: #cbd5e1;
+        margin: 8px 0 0 0;
+        font-weight: 300;
+        line-height: 1.4;
+        background: rgba(0, 0, 0, 0.2);
+        padding: 8px 12px;
+        border-radius: 6px;
+    }
+</style>
 <h1 class="page-title">Review Issue</h1>
 
 <div style="display: grid; grid-template-columns: 2fr 1.2fr; gap: 24px; margin-bottom: 30px; align-items: start;">
@@ -38,30 +128,31 @@
             </div>
         </div>
 
-        <!-- Previous Decision Log / History -->
+        <!-- Issue Activity History Timeline -->
         <div class="glass-panel" style="margin-bottom: 0;">
-            <h3 style="color: white; font-size: 1.2rem; margin-top: 0; margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 5px;">Workflow Decision History</h3>
+            <h3 style="color: white; font-size: 1.2rem; margin-top: 0; margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 5px;">Issue Activity History</h3>
             
-            {% if decisions %}
-                <div style="display: flex; flex-direction: column; gap: 15px;">
-                    {% for d in decisions %}
-                    <div style="background: rgba(0,0,0,0.15); padding: 15px; border-radius: 10px; border-left: 3px solid #8b5cf6;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                            <strong style="color: white; font-size: 0.95rem;">
-                                {{ d.decided_by.get_full_name|default:d.decided_by.username }} 
-                                <span style="font-weight: 300; color: #94a3b8;">({{ d.decided_by.get_role_display|default:d.decided_by.role }})</span>
-                            </strong>
-                            <span class="badge {% if d.decision == 'APPROVE' %}success{% elif d.decision == 'REJECT' %}danger{% else %}warning{% endif %}" style="font-size: 0.75rem;">
-                                {{ d.get_decision_display }}
-                            </span>
+            {% if history %}
+                <div class="timeline-container">
+                    {% for item in history %}
+                        <div class="timeline-item">
+                            <div class="timeline-badge {% if item.new_status in 'FINAL_APPROVED,DEAN_APPROVED,HOD_APPROVED' %}success{% elif item.new_status in 'REJECTED,RETURNED,RETURNED_TO_HOD,RETURNED_TO_DEAN' %}danger{% elif item.new_status == 'SUBMITTED' %}info{% else %}warning{% endif %}"></div>
+                            <div class="timeline-content">
+                                <h4>{{ item.action }}</h4>
+                                <div class="meta">
+                                    by <strong>{{ item.actor.get_full_name|default:item.actor.username }}</strong> 
+                                    ({{ item.actor.get_role_display|default:item.actor.role }}) 
+                                    • {{ item.created_at|date:"M d, Y" }} at {{ item.created_at|time:"H:i" }}
+                                </div>
+                                {% if item.notes %}
+                                    <p class="notes">{{ item.notes }}</p>
+                                {% endif %}
+                            </div>
                         </div>
-                        <p style="color: #cbd5e1; font-size: 0.9rem; margin: 0; font-weight: 300; line-height: 1.4;">{{ d.notes|default:"No notes provided." }}</p>
-                        <span style="display: block; font-size: 0.75rem; color: #64748b; margin-top: 8px;">{{ d.decided_at|date:"M d, Y" }} at {{ d.decided_at|time:"H:i" }}</span>
-                    </div>
                     {% endfor %}
                 </div>
             {% else %}
-                <p style="color: #94a3b8; font-size: 0.85rem; font-weight: 300; margin: 0;">No prior decisions have been made on this issue yet.</p>
+                <p style="color: #94a3b8; font-size: 0.85rem; font-weight: 300; margin: 0;">No activity logged yet.</p>
             {% endif %}
         </div>
     </div>

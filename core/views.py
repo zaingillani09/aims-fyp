@@ -247,15 +247,27 @@ def teacher_issue_detail(request, pk):
                 except Exception as e:
                     messages.warning(request, f"Issue updated safely, but couldn't submit: {str(e)}")
             else:
+                from issues.models import IssueHistory
+                IssueHistory.objects.create(
+                    issue=issue,
+                    actor=request.user,
+                    action="Draft Updated",
+                    old_status=issue.status,
+                    new_status=issue.status,
+                    notes="Draft issue content edited."
+                )
                 messages.success(request, "Your draft has been updated successfully.")
             return redirect('teacher_issues')
     else:
         form = IssueSubmitForm(instance=issue, user=request.user)
 
+    history = issue.history.all().order_by('created_at')
+
     return render(request, 'core/teacher/issue_detail.html', {
         'form': form,
         'issue': issue,
-        'editable': editable
+        'editable': editable,
+        'history': history,
     })
 
 @login_required
@@ -427,12 +439,14 @@ def issue_review(request, pk):
 
     # Get decision history
     decisions = issue.decisions.all().order_by('decided_at')
+    history = issue.history.all().order_by('created_at')
 
     return render(request, 'core/issues/issue_review.html', {
         'issue': issue,
         'form': form,
         'can_decide': can_decide,
         'decisions': decisions,
+        'history': history,
     })
 
 @login_required
