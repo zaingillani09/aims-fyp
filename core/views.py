@@ -528,3 +528,40 @@ def search_attendees(request):
         })
     return JsonResponse({"results": results})
 
+
+@login_required
+def meetings_events_api(request):
+    from meetings.models import Meeting
+    
+    meetings = Meeting.objects.filter(
+        Q(attendees=request.user) | Q(organizer=request.user)
+    ).distinct()
+    
+    events = []
+    for m in meetings:
+        if m.status == 'CONCLUDED':
+            color = '#10b981' # Green
+            text_color = '#ffffff'
+        elif m.status == 'CANCELLED':
+            color = '#ef4444' # Red
+            text_color = '#ffffff'
+        else: # SCHEDULED
+            color = '#8b5cf6' # Purple
+            text_color = '#ffffff'
+            
+        events.append({
+            "id": m.id,
+            "title": f"{m.get_meeting_type_display()} Meeting",
+            "start": f"{m.date.isoformat()}T{m.time.isoformat()}",
+            "url": f"/portal/meetings/{m.id}/",
+            "backgroundColor": color,
+            "borderColor": color,
+            "textColor": text_color,
+            "extendedProps": {
+                "location": m.location or "TBA",
+                "organizer": m.organizer.get_full_name() or m.organizer.username,
+                "status": m.get_status_display()
+            }
+        })
+    return JsonResponse(events, safe=False)
+

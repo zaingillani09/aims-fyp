@@ -1,7 +1,100 @@
 {% extends 'core/base.html' %}
 
 {% block content %}
-<h1 class="page-title">Meeting Schedule</h1>
+<!-- FullCalendar 5.11.3 CDN -->
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
+
+<style>
+    /* Custom FullCalendar glassmorphism styling */
+    #calendar {
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        padding: 20px;
+        color: white;
+    }
+    
+    .fc .fc-toolbar-title {
+        color: white;
+        font-size: 1.3rem;
+        font-weight: 600;
+    }
+    
+    .fc .fc-button-primary {
+        background: rgba(99, 102, 241, 0.2) !important;
+        border: 1px solid rgba(99, 102, 241, 0.4) !important;
+        color: #a5b4fc !important;
+        font-weight: 500 !important;
+        transition: all 0.2s ease !important;
+    }
+    
+    .fc .fc-button-primary:hover {
+        background: rgba(99, 102, 241, 0.4) !important;
+        border: 1px solid #6366f1 !important;
+        color: white !important;
+    }
+    
+    .fc .fc-button-primary:disabled {
+        background: rgba(255, 255, 255, 0.05) !important;
+        border: 1px solid rgba(255, 255, 255, 0.05) !important;
+        color: #64748b !important;
+    }
+    
+    .fc .fc-col-header-cell-cushion {
+        color: #94a3b8;
+        font-size: 0.9rem;
+        font-weight: 500;
+        text-decoration: none !important;
+    }
+    
+    .fc .fc-daygrid-day-number {
+        color: #cbd5e1;
+        text-decoration: none !important;
+        font-size: 0.85rem;
+        padding: 6px !important;
+    }
+    
+    .fc-theme-standard td, .fc-theme-standard th {
+        border: 1px solid rgba(255, 255, 255, 0.05) !important;
+    }
+    
+    .fc-theme-standard .fc-scrollgrid {
+        border: 1px solid rgba(255, 255, 255, 0.05) !important;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    
+    .fc .fc-day-today {
+        background: rgba(99, 102, 241, 0.05) !important;
+    }
+    
+    .fc-event {
+        cursor: pointer;
+        border-radius: 6px !important;
+        padding: 4px 8px !important;
+        font-size: 0.8rem !important;
+        font-weight: 500 !important;
+        border: none !important;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3) !important;
+        transition: transform 0.15s ease !important;
+    }
+
+    .fc-event:hover {
+        transform: scale(1.02) !important;
+    }
+</style>
+
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <h1 class="page-title" style="margin: 0;">Meeting Schedule</h1>
+    {% if request.user.role in 'HOD,DEAN,RECTOR' %}
+        <a href="{% url 'meeting_create' %}" class="btn" style="padding: 10px 20px;">Schedule New Meeting</a>
+    {% endif %}
+</div>
+
+<div class="glass-panel" style="margin-bottom: 24px; padding: 20px;">
+    <div id="calendar"></div>
+</div>
 
 <div class="glass-panel" style="padding: 0; overflow: hidden; margin-bottom: 24px;">
     <h2 style="padding: 20px 20px 10px 20px; margin: 0; color:white; font-size:1.4rem;">Scheduled Meetings</h2>
@@ -84,4 +177,34 @@
     </div>
     {% endif %}
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var calendarEl = document.getElementById('calendar');
+    if (calendarEl) {
+        var calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek'
+            },
+            events: '/portal/meetings/events/',
+            eventDidMount: function(info) {
+                const location = info.event.extendedProps.location;
+                const organizer = info.event.extendedProps.organizer;
+                const status = info.event.extendedProps.status;
+                info.el.setAttribute('title', `${info.event.title}\nStatus: ${status}\nLocation: ${location}\nOrganizer: ${organizer}`);
+            },
+            eventClick: function(info) {
+                if (info.event.url) {
+                    window.location.href = info.event.url;
+                    info.jsEvent.preventDefault();
+                }
+            }
+        });
+        calendar.render();
+    }
+});
+</script>
 {% endblock %}
