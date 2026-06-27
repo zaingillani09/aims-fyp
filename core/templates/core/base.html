@@ -173,47 +173,95 @@
                     try {
                         const data = JSON.parse(e.data);
                         
-                        // 1. Update Notification Badge
-                        let badge = document.querySelector('.notification-badge');
-                        let bell = document.getElementById('bellIcon');
-                        if (!badge) {
-                            badge = document.createElement('span');
-                            badge.className = 'notification-badge';
-                            // Insert the badge right after the text (bell emoji 🔔) but before dropdown
+                        if (data.type === "sync_notifications") {
+                            // 1. Sync Notification Badge
+                            let badge = document.querySelector('.notification-badge');
+                            let bell = document.getElementById('bellIcon');
+                            if (data.unread_count > 0) {
+                                if (!badge) {
+                                    badge = document.createElement('span');
+                                    badge.className = 'notification-badge';
+                                    const dropdown = document.getElementById('notifDropdown');
+                                    bell.insertBefore(badge, dropdown);
+                                }
+                                badge.textContent = data.unread_count;
+                            } else {
+                                if (badge) {
+                                    badge.remove();
+                                }
+                            }
+                            
+                            // 2. Populate Dropdown with latest unread notifications
                             const dropdown = document.getElementById('notifDropdown');
-                            bell.insertBefore(badge, dropdown);
+                            const currentItems = dropdown.querySelectorAll('.notification-item');
+                            currentItems.forEach(item => item.remove());
+                            
+                            const emptyMsg = dropdown.querySelector('.notification-empty');
+                            if (data.latest_notifications.length > 0) {
+                                if (emptyMsg) {
+                                    emptyMsg.remove();
+                                }
+                                const header = dropdown.querySelector('h4');
+                                // Prepend in reverse order so latest is at the top
+                                data.latest_notifications.slice().reverse().forEach(notif => {
+                                    const notifItem = document.createElement('a');
+                                    notifItem.href = notif.link || "#";
+                                    notifItem.className = 'notification-item';
+                                    notifItem.innerHTML = `
+                                        ${notif.message}
+                                        <div style="font-size: 0.7rem; color: #64748b; margin-top: 5px;">${notif.created_at}</div>
+                                    `;
+                                    header.insertAdjacentElement('afterend', notifItem);
+                                });
+                            } else {
+                                if (!emptyMsg) {
+                                    const emptyDiv = document.createElement('div');
+                                    emptyDiv.className = 'notification-empty';
+                                    emptyDiv.textContent = 'No new notifications';
+                                    const header = dropdown.querySelector('h4');
+                                    header.insertAdjacentElement('afterend', emptyDiv);
+                                }
+                            }
+                        } else if (data.type === "new_notification") {
+                            // 1. Update Notification Badge
+                            let badge = document.querySelector('.notification-badge');
+                            let bell = document.getElementById('bellIcon');
+                            if (!badge) {
+                                badge = document.createElement('span');
+                                badge.className = 'notification-badge';
+                                const dropdown = document.getElementById('notifDropdown');
+                                bell.insertBefore(badge, dropdown);
+                            }
+                            let count = parseInt(badge.textContent || "0");
+                            badge.textContent = count + 1;
+                            
+                            // 2. Prepend item to dropdown
+                            const dropdown = document.getElementById('notifDropdown');
+                            const emptyMsg = dropdown.querySelector('.notification-empty');
+                            if (emptyMsg) {
+                                emptyMsg.remove();
+                            }
+                            
+                            const notifItem = document.createElement('a');
+                            notifItem.href = data.link || "#";
+                            notifItem.className = 'notification-item';
+                            notifItem.innerHTML = `
+                                ${data.message}
+                                <div style="font-size: 0.7rem; color: #64748b; margin-top: 5px;">${data.created_at}</div>
+                            `;
+                            
+                            const header = dropdown.querySelector('h4');
+                            header.insertAdjacentElement('afterend', notifItem);
+                            
+                            // Keep max 5 notifications in dropdown
+                            const items = dropdown.querySelectorAll('.notification-item');
+                            if (items.length > 5) {
+                                items[items.length - 1].remove();
+                            }
+                            
+                            // 3. Trigger glassmorphic toast notification
+                            showToastNotification(data.message, data.link);
                         }
-                        let count = parseInt(badge.textContent || "0");
-                        badge.textContent = count + 1;
-                        
-                        // 2. Prepend item to dropdown
-                        const dropdown = document.getElementById('notifDropdown');
-                        const emptyMsg = dropdown.querySelector('.notification-empty');
-                        if (emptyMsg) {
-                            emptyMsg.remove();
-                        }
-                        
-                        const notifItem = document.createElement('a');
-                        notifItem.href = data.link || "#";
-                        notifItem.className = 'notification-item';
-                        notifItem.innerHTML = `
-                            ${data.message}
-                            <div style="font-size: 0.7rem; color: #64748b; margin-top: 5px;">${data.created_at}</div>
-                        `;
-                        
-                        // Insert right after dropdown title (h4)
-                        const header = dropdown.querySelector('h4');
-                        header.insertAdjacentElement('afterend', notifItem);
-                        
-                        // Keep max 5 notifications in dropdown
-                        const items = dropdown.querySelectorAll('.notification-item');
-                        if (items.length > 5) {
-                            items[items.length - 1].remove();
-                        }
-                        
-                        // 3. Trigger glassmorphic toast notification
-                        showToastNotification(data.message, data.link);
-                        
                     } catch (err) {
                         console.error("Error handling notification message:", err);
                     }

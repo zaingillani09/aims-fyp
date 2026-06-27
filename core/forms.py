@@ -118,6 +118,9 @@ class ConcludeMeetingForm(forms.ModelForm):
             name = file.name.lower()
             if not (name.endswith('.pdf') or name.endswith('.doc') or name.endswith('.docx')):
                 raise forms.ValidationError("Only .word or .pdf files are accepted here.")
+            # Enforce 10MB file size limit
+            if file.size > 10 * 1024 * 1024:
+                raise forms.ValidationError("Minutes document cannot exceed 10 megabytes in size.")
         return file
 
 class IssueDecisionForm(forms.ModelForm):

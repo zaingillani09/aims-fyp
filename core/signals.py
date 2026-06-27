@@ -78,19 +78,26 @@ def broadcast_notification(sender, instance, created, **kwargs):
     if created:
         from channels.layers import get_channel_layer
         from asgiref.sync import async_to_sync
+        import threading
 
         channel_layer = get_channel_layer()
         if channel_layer:
-            async_to_sync(channel_layer.group_send)(
-                f"user_{instance.recipient.id}",
-                {
-                    "type": "send_notification",
-                    "notification": {
-                        "id": instance.id,
-                        "message": instance.message,
-                        "link": f"/portal/notifications/read/{instance.id}/" if instance.id else "",
-                        "created_at": "Just now"
-                    }
-                }
-            )
+            def send_broadcast():
+                try:
+                    async_to_sync(channel_layer.group_send)(
+                        f"user_{instance.recipient.id}",
+                        {
+                            "type": "send_notification",
+                            "notification": {
+                                "id": instance.id,
+                                "message": instance.message,
+                                "link": f"/portal/notifications/read/{instance.id}/" if instance.id else "",
+                                "created_at": "Just now"
+                            }
+                        }
+                    )
+                except Exception as e:
+                    print("Background WebSocket broadcast failed:", e)
+
+            threading.Thread(target=send_broadcast, daemon=True).start()
 
