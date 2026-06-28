@@ -152,7 +152,11 @@
 
             <div style="margin-top: 25px;">
                 <h3 style="color: white; font-size: 1.1rem; margin-top: 0; margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 5px;">Description</h3>
-                <p style="color: #cbd5e1; line-height: 1.6; font-weight: 300; margin: 0; white-space: pre-wrap;">{{ issue.description }}</p>
+                <p style="color: #cbd5e1; line-height: 1.6; font-weight: 300; margin: 0; white-space: pre-wrap; margin-bottom: 20px;">{{ issue.description }}</p>
+                
+                <a href="{% url 'issue_pdf_report' issue.pk %}" class="btn" style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.4); color: #a7f3d0; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; font-size: 0.85rem; padding: 8px 16px;">
+                    <span>📥</span> Download PDF Archive Report
+                </a>
             </div>
         </div>
 

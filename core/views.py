@@ -641,3 +641,223 @@ def meetings_events_api(request):
         })
     return JsonResponse(events, safe=False)
 
+
+from django.core.exceptions import PermissionDenied
+from django.http import Http404, HttpResponse
+import datetime
+
+@login_required
+def issue_pdf_report(request, pk):
+    from issues.models import Issue
+    try:
+        issue = Issue.objects.get(pk=pk)
+    except Issue.DoesNotExist:
+        try:
+            issue = Issue.all_objects.get(pk=pk)
+        except Issue.DoesNotExist:
+            raise Http404("Issue not found")
+            
+    # Scope permission checks
+    user = request.user
+    role = getattr(user, 'role', None)
+    can_view = False
+    
+    if role == "TEACHER" and issue.created_by == user:
+        can_view = True
+    elif role == "HOD" and issue.department == getattr(user, 'hod_of', None):
+        can_view = True
+    elif role == "DEAN" and issue.department.faculty == getattr(user, 'dean_of', None):
+        can_view = True
+    elif role == "RECTOR":
+        can_view = True
+        
+    if not can_view:
+        raise PermissionDenied("You do not have permission to export this report.")
+        
+    # Generate the PDF Response
+    response = HttpResponse(content_type='application/pdf')
+    safe_title = "".join([c if c.isalnum() else "_" for c in issue.title[:30]])
+    response['Content-Disposition'] = f'attachment; filename="AIMS_Report_Issue_{issue.id}_{safe_title}.pdf"'
+    
+    from reportlab.lib.pagesizes import letter
+    from reportlab.lib import colors
+    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib.units import inch
+
+    # Setup document
+    doc = SimpleDocTemplate(
+        response,
+        pagesize=letter,
+        rightMargin=54,
+        leftMargin=54,
+        topMargin=54,
+        bottomMargin=54
+    )
+    
+    styles = getSampleStyleSheet()
+    
+    title_style = ParagraphStyle(
+        name='TitleStyle',
+        parent=styles['Heading1'],
+        fontName='Helvetica-Bold',
+        fontSize=20,
+        leading=24,
+        textColor=colors.HexColor('#1e1b4b'),
+        spaceAfter=15
+    )
+    
+    subtitle_style = ParagraphStyle(
+        name='SubTitleStyle',
+        parent=styles['Normal'],
+        fontName='Helvetica-Oblique',
+        fontSize=10,
+        leading=14,
+        textColor=colors.HexColor('#64748b'),
+        spaceAfter=25
+    )
+    
+    section_heading = ParagraphStyle(
+        name='SectionHeading',
+        parent=styles['Heading2'],
+        fontName='Helvetica-Bold',
+        fontSize=12,
+        leading=16,
+        textColor=colors.HexColor('#1e1b4b'),
+        spaceBefore=15,
+        spaceAfter=8,
+        keepWithNext=True
+    )
+    
+    body_style = ParagraphStyle(
+        name='BodyStyle',
+        parent=styles['Normal'],
+        fontName='Helvetica',
+        fontSize=9.5,
+        leading=14,
+        textColor=colors.HexColor('#334155')
+    )
+    
+    table_cell_style = ParagraphStyle(
+        name='TableCell',
+        parent=styles['Normal'],
+        fontName='Helvetica',
+        fontSize=9,
+        leading=12,
+        textColor=colors.HexColor('#334155')
+    )
+    
+    table_header_style = ParagraphStyle(
+        name='TableHeader',
+        parent=styles['Normal'],
+        fontName='Helvetica-Bold',
+        fontSize=9,
+        leading=12,
+        textColor=colors.white
+    )
+    
+    story = []
+    
+    # 1. Header
+    story.append(Paragraph("Academic Information Management System (AIMS)", title_style))
+    story.append(Paragraph(f"Official Issue Review Log & Action Report — Generated on {datetime.date.today().strftime('%B %d, %Y')}", subtitle_style))
+    
+    # 2. Metadata Table
+    meta_data = [
+        [
+            Paragraph("<b>Issue ID:</b>", body_style), Paragraph(str(issue.id), body_style),
+            Paragraph("<b>Current Status:</b>", body_style), Paragraph(issue.get_status_display(), body_style)
+        ],
+        [
+            Paragraph("<b>Created By:</b>", body_style), Paragraph(issue.created_by.get_full_name() or issue.created_by.username, body_style),
+            Paragraph("<b>Date Submitted:</b>", body_style), Paragraph(issue.created_at.strftime("%B %d, %Y at %H:%M") if issue.created_at else "Draft", body_style)
+        ],
+        [
+            Paragraph("<b>Department:</b>", body_style), Paragraph(issue.department.name if issue.department else "N/A", body_style),
+            Paragraph("<b>Faculty:</b>", body_style), Paragraph(issue.department.faculty.name if issue.department and issue.department.faculty else "N/A", body_style)
+        ]
+    ]
+    
+    meta_table = Table(meta_data, colWidths=[1.25*inch, 2.25*inch, 1.25*inch, 2.25*inch])
+    meta_table.setStyle(TableStyle([
+        ('ALIGN', (0,0), (-1,-1), 'LEFT'),
+        ('VALIGN', (0,0), (-1,-1), 'TOP'),
+        ('LINEBELOW', (0,0), (-1,-1), 0.5, colors.HexColor('#e2e8f0')),
+        ('TOPPADDING', (0,0), (-1,-1), 6),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 6),
+    ]))
+    story.append(meta_table)
+    story.append(Spacer(1, 15))
+    
+    # 3. Issue Title & Description
+    story.append(Paragraph("Issue Description", section_heading))
+    story.append(Paragraph(f"<b>Title:</b> {issue.title}", body_style))
+    story.append(Spacer(1, 8))
+    desc_p = Paragraph(issue.description.replace('\n', '<br/>'), body_style)
+    story.append(desc_p)
+    story.append(Spacer(1, 15))
+    
+    # 4. Official Review Notes
+    if issue.hod_notes or issue.dean_notes or issue.rector_notes:
+        story.append(Paragraph("Official Leadership Decisions", section_heading))
+        notes_data = []
+        if issue.hod_notes:
+            notes_data.append([Paragraph("<b>HOD Notes:</b>", body_style), Paragraph(issue.hod_notes.replace('\n', '<br/>'), body_style)])
+        if issue.dean_notes:
+            notes_data.append([Paragraph("<b>Dean Notes:</b>", body_style), Paragraph(issue.dean_notes.replace('\n', '<br/>'), body_style)])
+        if issue.rector_notes:
+            notes_data.append([Paragraph("<b>Rector Notes:</b>", body_style), Paragraph(issue.rector_notes.replace('\n', '<br/>'), body_style)])
+            
+        notes_table = Table(notes_data, colWidths=[1.5*inch, 5.5*inch])
+        notes_table.setStyle(TableStyle([
+            ('VALIGN', (0,0), (-1,-1), 'TOP'),
+            ('LINEBELOW', (0,0), (-1,-1), 0.5, colors.HexColor('#e2e8f0')),
+            ('TOPPADDING', (0,0), (-1,-1), 6),
+            ('BOTTOMPADDING', (0,0), (-1,-1), 6),
+        ]))
+        notes_table.setStyle(TableStyle([
+            ('VALIGN', (0,0), (-1,-1), 'TOP'),
+            ('LINEBELOW', (0,0), (-1,-1), 0.5, colors.HexColor('#e2e8f0')),
+            ('TOPPADDING', (0,0), (-1,-1), 6),
+            ('BOTTOMPADDING', (0,0), (-1,-1), 6),
+        ]))
+        story.append(notes_table)
+        story.append(Spacer(1, 15))
+        
+    # 5. Activity History Logs
+    history = issue.history.all().order_by('created_at')
+    if history.exists():
+        story.append(Paragraph("Activity Log & History Timeline", section_heading))
+        hist_headers = [
+            Paragraph("Date & Time", table_header_style),
+            Paragraph("Action", table_header_style),
+            Paragraph("Actor", table_header_style),
+            Paragraph("Notes / Remarks", table_header_style)
+        ]
+        
+        hist_rows = [hist_headers]
+        for item in history:
+            time_str = item.created_at.strftime("%b %d, %Y - %H:%M")
+            actor_name = f"{item.actor.get_full_name() or item.actor.username} ({item.actor.get_role_display() or item.actor.role})"
+            hist_rows.append([
+                Paragraph(time_str, table_cell_style),
+                Paragraph(item.action, table_cell_style),
+                Paragraph(actor_name, table_cell_style),
+                Paragraph(item.notes or "No notes added.", table_cell_style)
+            ])
+            
+        hist_table = Table(hist_rows, colWidths=[1.5*inch, 1.5*inch, 2.0*inch, 2.0*inch])
+        hist_table.setStyle(TableStyle([
+            ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#1e1b4b')),
+            ('ALIGN', (0,0), (-1,-1), 'LEFT'),
+            ('VALIGN', (0,0), (-1,-1), 'TOP'),
+            ('ROWBACKGROUNDS', (0,1), (-1,-1), [colors.HexColor('#f8fafc'), colors.white]),
+            ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#cbd5e1')),
+            ('TOPPADDING', (0,0), (-1,-1), 6),
+            ('BOTTOMPADDING', (0,0), (-1,-1), 6),
+        ]))
+        story.append(hist_table)
+        
+    doc.build(story)
+    return response
+

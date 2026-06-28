@@ -205,8 +205,11 @@
         </div>
         {% endif %}
 
-        <div style="margin-top: 30px;">
+        <div style="margin-top: 30px; display: flex; gap: 15px; align-items: center;">
             <a href="{% url 'teacher_issues' %}" class="btn" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);">Back to List</a>
+            <a href="{% url 'issue_pdf_report' issue.pk %}" class="btn" style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.4); color: #a7f3d0; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
+                <span>📥</span> Download PDF Report
+            </a>
         </div>
     {% endif %}
 </div>

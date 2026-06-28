@@ -21,4 +21,5 @@ urlpatterns = [
     path('notifications/read/<int:pk>/', views.mark_notification_read, name='mark_notification_read'),
     path('meetings/search-attendees/', views.search_attendees, name='search_attendees'),
     path('meetings/events/', views.meetings_events_api, name='meetings_events_api'),
+    path('issues/<int:pk>/pdf/', views.issue_pdf_report, name='issue_pdf_report'),
 ]
