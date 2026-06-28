@@ -147,6 +147,8 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 # Google Drive Cloud Storage Integration
 GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE = os.path.join(BASE_DIR, 'google_drive_credentials.json')
+GOOGLE_DRIVE_STORAGE_ROOT = '1AzknkatYu78KxWR0eqpUbHA4m81fRQc-'
+GOOGLE_DRIVE_STORAGE_MEDIA_ROOT = '1AzknkatYu78KxWR0eqpUbHA4m81fRQc-'
 
 if os.path.exists(GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE):
     STORAGES = {
