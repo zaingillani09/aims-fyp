@@ -245,4 +245,75 @@
         <p style="color: #94a3b8; font-size: 0.85rem; font-weight: 300; margin: 0;">No activity logged yet.</p>
     {% endif %}
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const titleInput = document.getElementById('id_title');
+    const deptInput = document.getElementById('id_department');
+    const descInput = document.getElementById('id_description');
+    const form = titleInput ? titleInput.closest('form') : null;
+    
+    if (!titleInput || !descInput || !form) return;
+    
+    const storageKey = `aims_draft_issue_{{ issue.id }}`;
+    
+    // 1. Restore saved values if present
+    const savedDataStr = localStorage.getItem(storageKey);
+    if (savedDataStr) {
+        try {
+            const savedData = JSON.parse(savedDataStr);
+            if (savedData.title && !titleInput.value) {
+                titleInput.value = savedData.title;
+            }
+            if (savedData.description && !descInput.value) {
+                descInput.value = savedData.description;
+            }
+            if (savedData.department && deptInput && !deptInput.value) {
+                deptInput.value = savedData.department;
+            }
+            showAutoSaveIndicator("Draft edits restored from local save!");
+        } catch (e) {
+            console.error("Failed to parse saved draft edits:", e);
+        }
+    }
+    
+    // 2. Setup periodic auto-save interval
+    setInterval(function() {
+        const title = titleInput.value.trim();
+        const description = descInput.value.trim();
+        const department = deptInput ? deptInput.value : '';
+        
+        if (title || description) {
+            const dataToSave = {
+                title: title,
+                description: description,
+                department: department,
+                timestamp: new Date().getTime()
+            };
+            localStorage.setItem(storageKey, JSON.stringify(dataToSave));
+            showAutoSaveIndicator("Draft edits auto-saved locally");
+        }
+    }, 5000);
+    
+    // 3. Clear local storage on form submit
+    form.addEventListener('submit', function() {
+        localStorage.removeItem(storageKey);
+    });
+    
+    function showAutoSaveIndicator(message) {
+        let indicator = document.getElementById('autosave-indicator');
+        if (!indicator) {
+            indicator = document.createElement('div');
+            indicator.id = 'autosave-indicator';
+            indicator.style.cssText = "position: fixed; bottom: 20px; right: 20px; background: rgba(16, 185, 129, 0.9); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; padding: 10px 16px; font-size: 0.8rem; color: white; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.3); opacity: 0; transition: opacity 0.3s ease; pointer-events: none;";
+            document.body.appendChild(indicator);
+        }
+        indicator.textContent = message;
+        indicator.style.opacity = '1';
+        setTimeout(() => {
+            indicator.style.opacity = '0';
+        }, 2000);
+    }
+});
+</script>
 {% endblock %}
