@@ -1,0 +1,50 @@
+{% if issues %}
+<table class="data-table">
+    <thead>
+        <tr>
+            <th>Title</th>
+            {% if role in 'DEAN,RECTOR' %}
+                <th>Department</th>
+            {% endif %}
+            {% if role in 'HOD,DEAN,RECTOR' %}
+                <th>Creator</th>
+            {% endif %}
+            <th>Status</th>
+            <th>Submitted On</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for issue in issues %}
+        <tr>
+            <td style="font-weight: 500;">
+                {% if role == 'TEACHER' %}
+                    <a href="{% url 'teacher_issue_detail' issue.pk %}" style="color: #60a5fa; text-decoration: none; transition: color 0.2s;">
+                        {{ issue.title }}
+                    </a>
+                {% else %}
+                    <a href="{% url 'issue_review' issue.pk %}" style="color: #60a5fa; text-decoration: none; transition: color 0.2s;">
+                        {{ issue.title }}
+                    </a>
+                {% endif %}
+            </td>
+            {% if role in 'DEAN,RECTOR' %}
+                <td style="color:#cbd5e1;">{{ issue.department.name }}</td>
+            {% endif %}
+            {% if role in 'HOD,DEAN,RECTOR' %}
+                <td style="color:#cbd5e1;">{{ issue.created_by.get_full_name|default:issue.created_by.username }}</td>
+            {% endif %}
+            <td>
+                <span class="badge {% if issue.status in 'FINAL_APPROVED,DEAN_APPROVED,HOD_APPROVED' %}success{% elif issue.status in 'REJECTED,RETURNED,RETURNED_TO_HOD,RETURNED_TO_DEAN' %}danger{% else %}warning{% endif %}">
+                    {{ issue.get_status_display }}
+                </span>
+            </td>
+            <td style="color:#cbd5e1;">{{ issue.created_at|date:"M d, Y" }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<div style="padding: 40px; text-align: center; color: #94a3b8;">
+    <p>No matching issues found.</p>
+</div>
+{% endif %}

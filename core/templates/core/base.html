@@ -66,7 +66,7 @@
                 Dashboard
             </a>
             <a href="{% url 'teacher_issues' %}" class="nav-link {% if 'issues' in request.resolver_match.url_name %}active{% endif %}">
-                My Issues
+                Issues Explorer
             </a>
             <a href="{% url 'meeting_create' %}" class="nav-link {% if request.resolver_match.url_name == 'meeting_create' %}active{% endif %}">
                 Schedule BOS
@@ -76,7 +76,7 @@
                 Dashboard
             </a>
             <a href="{% url 'teacher_issues' %}" class="nav-link {% if 'issues' in request.resolver_match.url_name %}active{% endif %}">
-                My Issues
+                Issues Explorer
             </a>
             <a href="{% url 'meeting_create' %}" class="nav-link {% if request.resolver_match.url_name == 'meeting_create' %}active{% endif %}">
                 Schedule BOF
@@ -84,6 +84,9 @@
         {% elif request.user.role == 'RECTOR' %}
             <a href="{% url 'rector_dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'rector_dashboard' %}active{% endif %}">
                 Dashboard
+            </a>
+            <a href="{% url 'teacher_issues' %}" class="nav-link {% if 'issues' in request.resolver_match.url_name %}active{% endif %}">
+                Issues Explorer
             </a>
             <a href="{% url 'meeting_create' %}" class="nav-link {% if request.resolver_match.url_name == 'meeting_create' %}active{% endif %}">
                 Schedule DCM

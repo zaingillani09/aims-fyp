@@ -2,42 +2,125 @@
 
 {% block content %}
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
-    <h1 class="page-title" style="margin: 0;">My Submitted Issues</h1>
-    <a href="{% url 'teacher_submit_issue' %}" class="btn">+ Submit New Issue</a>
-</div>
-
-<div class="glass-panel" style="padding: 0; overflow: hidden;">
-    {% if issues %}
-    <table class="data-table">
-        <thead>
-            <tr>
-                <th>Title</th>
-                <th>Status</th>
-                <th>Submitted On</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for issue in issues %}
-            <tr>
-                <td style="font-weight: 500;">
-                    <a href="{% url 'teacher_issue_detail' issue.pk %}" style="color: #60a5fa; text-decoration: none; transition: color 0.2s;">
-                        {{ issue.title }}
-                    </a>
-                </td>
-                <td>
-                    <span class="badge {% if issue.status in 'FINAL_APPROVED,DEAN_APPROVED,HOD_APPROVED' %}success{% elif issue.status in 'REJECTED,RETURNED,RETURNED_TO_HOD,RETURNED_TO_DEAN' %}danger{% else %}warning{% endif %}">
-                        {{ issue.get_status_display }}
-                    </span>
-                </td>
-                <td style="color:#cbd5e1;">{{ issue.created_at|date:"M d, Y" }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    {% else %}
-    <div style="padding: 40px; text-align: center; color: #94a3b8;">
-        <p>You haven't submitted any issues yet.</p>
-    </div>
+    <h1 class="page-title" style="margin: 0;">
+        {% if role == 'TEACHER' %}My Submitted Issues{% else %}Issues Explorer Archive{% endif %}
+    </h1>
+    {% if role == 'TEACHER' %}
+        <a href="{% url 'teacher_submit_issue' %}" class="btn">+ Submit New Issue</a>
     {% endif %}
 </div>
+
+<div style="display: grid; grid-template-columns: 280px 1fr; gap: 24px; align-items: start;">
+    <!-- Sidebar: Filters -->
+    <div class="glass-panel" style="padding: 20px; position: sticky; top: 20px; box-sizing: border-box;">
+        <h3 style="color: white; margin-top: 0; margin-bottom: 20px; font-size: 1.1rem; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 8px;">Filters</h3>
+        
+        <form id="filter-form">
+            <!-- Search Query -->
+            <div class="form-group" style="margin-bottom: 15px;">
+                <label for="id_q" style="font-size: 0.8rem; margin-bottom: 6px; display: block; color: #94a3b8;">Search keyword</label>
+                <input type="text" id="id_q" name="q" placeholder="Title or description..." class="form-control" style="background:rgba(0,0,0,0.25); border-color:rgba(255,255,255,0.08); font-size:0.85rem; padding: 8px 12px; box-sizing: border-box;">
+            </div>
+
+            <!-- Status Filter -->
+            <div class="form-group" style="margin-bottom: 15px;">
+                <label for="id_status" style="font-size: 0.8rem; margin-bottom: 6px; display: block; color: #94a3b8;">Status</label>
+                <select id="id_status" name="status" class="form-control" style="background:rgba(0,0,0,0.25); border-color:rgba(255,255,255,0.08); font-size:0.85rem; padding: 8px 12px; color: #cbd5e1; cursor: pointer; box-sizing: border-box;">
+                    <option value="" style="background:#1e1b4b; color:#cbd5e1;">All Statuses</option>
+                    {% for val, label in statuses %}
+                        <option value="{{ val }}" style="background:#1e1b4b; color:#cbd5e1;">{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Department Filter (for Dean & Rector) -->
+            {% if departments %}
+            <div class="form-group" style="margin-bottom: 15px;">
+                <label for="id_department" style="font-size: 0.8rem; margin-bottom: 6px; display: block; color: #94a3b8;">Department</label>
+                <select id="id_department" name="department" class="form-control" style="background:rgba(0,0,0,0.25); border-color:rgba(255,255,255,0.08); font-size:0.85rem; padding: 8px 12px; color: #cbd5e1; cursor: pointer; box-sizing: border-box;">
+                    <option value="" style="background:#1e1b4b; color:#cbd5e1;">All Departments</option>
+                    {% for dept in departments %}
+                        <option value="{{ dept.id }}" style="background:#1e1b4b; color:#cbd5e1;">{{ dept.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% endif %}
+
+            <!-- Creator Name (for HOD, Dean, Rector) -->
+            {% if role in 'HOD,DEAN,RECTOR' %}
+            <div class="form-group" style="margin-bottom: 15px;">
+                <label for="id_creator" style="font-size: 0.8rem; margin-bottom: 6px; display: block; color: #94a3b8;">Submitted By</label>
+                <input type="text" id="id_creator" name="creator" placeholder="Name or username..." class="form-control" style="background:rgba(0,0,0,0.25); border-color:rgba(255,255,255,0.08); font-size:0.85rem; padding: 8px 12px; box-sizing: border-box;">
+            </div>
+            {% endif %}
+
+            <!-- Date Range -->
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label style="font-size: 0.8rem; margin-bottom: 6px; display: block; color: #94a3b8;">Date Range</label>
+                <input type="date" id="id_date_from" name="date_from" class="form-control" style="background:rgba(0,0,0,0.25); border-color:rgba(255,255,255,0.08); font-size:0.85rem; padding: 8px 12px; color: #cbd5e1; margin-bottom: 8px; box-sizing: border-box;">
+                <input type="date" id="id_date_to" name="date_to" class="form-control" style="background:rgba(0,0,0,0.25); border-color:rgba(255,255,255,0.08); font-size:0.85rem; padding: 8px 12px; color: #cbd5e1; box-sizing: border-box;">
+            </div>
+
+            <button type="button" id="clear-filters-btn" class="btn" style="width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #cbd5e1;">
+                Clear Filters
+            </button>
+        </form>
+    </div>
+
+    <!-- Right Column: Issues List -->
+    <div class="glass-panel" style="padding: 0; overflow: hidden;" id="issues-list-container">
+        {% include 'core/teacher/includes/issues_list_partial.html' %}
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const filterForm = document.getElementById('filter-form');
+    const listContainer = document.getElementById('issues-list-container');
+    const clearBtn = document.getElementById('clear-filters-btn');
+    
+    let debounceTimer = null;
+    
+    function fetchFilteredIssues() {
+        const params = new URLSearchParams(new FormData(filterForm));
+        params.set('ajax', '1');
+        
+        const url = `${window.location.pathname}?${params.toString()}`;
+        
+        fetch(url, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+            .then(res => res.text())
+            .then(html => {
+                listContainer.innerHTML = html;
+            })
+            .catch(err => console.error("Error fetching filtered issues:", err));
+    }
+    
+    function debouncedFetch() {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(fetchFilteredIssues, 250);
+    }
+    
+    // Bind input events (debounced)
+    filterForm.querySelectorAll('input[type="text"]').forEach(input => {
+        input.addEventListener('input', debouncedFetch);
+    });
+    
+    // Bind change events
+    filterForm.querySelectorAll('select, input[type="date"]').forEach(el => {
+        el.addEventListener('change', fetchFilteredIssues);
+    });
+    
+    // Clear filters action
+    if (clearBtn) {
+        clearBtn.addEventListener('click', function() {
+            filterForm.reset();
+            fetchFilteredIssues();
+        });
+    }
+});
+</script>
 {% endblock %}

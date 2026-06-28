@@ -115,12 +115,88 @@ def dean_dashboard(request):
 
 @login_required
 def teacher_issues(request):
-    role = getattr(request.user, 'role', None)
-    if role not in ["TEACHER", "HOD", "DEAN"]:
-        return redirect('portal_router')
+    user = request.user
+    role = getattr(user, 'role', None)
+    
+    # 1. Determine base queryset based on role scope
+    if role == "TEACHER":
+        queryset = Issue.objects.filter(created_by=user)
+    elif role == "HOD":
+        dept = getattr(user, 'hod_of', None)
+        if dept:
+            queryset = Issue.objects.filter(department=dept).exclude(status='DRAFT')
+        else:
+            queryset = Issue.objects.none()
+    elif role == "DEAN":
+        faculty = getattr(user, 'dean_of', None)
+        if faculty:
+            queryset = Issue.objects.filter(department__faculty=faculty).exclude(status='DRAFT')
+        else:
+            queryset = Issue.objects.none()
+    elif role == "RECTOR":
+        queryset = Issue.objects.exclude(status='DRAFT')
+    else:
+        queryset = Issue.objects.none()
+
+    # 2. Apply Filters
+    from django.db.models import Q
+    q = request.GET.get('q', '').strip()
+    if q:
+        queryset = queryset.filter(
+            Q(title__icontains=q) | 
+            Q(description__icontains=q)
+        )
         
-    issues = Issue.objects.filter(created_by=request.user).order_by('-created_at')
-    return render(request, 'core/teacher/issues.html', {'issues': issues})
+    status = request.GET.get('status', '').strip()
+    if status:
+        queryset = queryset.filter(status=status)
+        
+    department_id = request.GET.get('department', '').strip()
+    if department_id:
+        queryset = queryset.filter(department_id=department_id)
+        
+    creator = request.GET.get('creator', '').strip()
+    if creator:
+        queryset = queryset.filter(
+            Q(created_by__first_name__icontains=creator) |
+            Q(created_by__last_name__icontains=creator) |
+            Q(created_by__username__icontains=creator)
+        )
+        
+    date_from = request.GET.get('date_from', '').strip()
+    if date_from:
+        queryset = queryset.filter(created_at__date__gte=date_from)
+        
+    date_to = request.GET.get('date_to', '').strip()
+    if date_to:
+        queryset = queryset.filter(created_at__date__lte=date_to)
+        
+    issues = queryset.order_by('-created_at')
+    
+    # Get all active departments for selection lists (for Rector/Dean)
+    from core.models import Department
+    if role == "RECTOR":
+        departments = Department.objects.all().order_by('name')
+    elif role == "DEAN" and getattr(user, 'dean_of', None):
+        departments = Department.objects.filter(faculty=user.dean_of).order_by('name')
+    else:
+        departments = []
+
+    # 3. Handle AJAX partial render or full page load
+    is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.GET.get('ajax') == '1'
+    
+    if is_ajax:
+        return render(request, 'core/teacher/includes/issues_list_partial.html', {
+            'issues': issues,
+            'role': role
+        })
+        
+    return render(request, 'core/teacher/issues.html', {
+        'issues': issues,
+        'departments': departments,
+        'role': role,
+        'statuses': Issue.Status.choices
+    })
 
 @login_required
 def teacher_submit_issue(request):
