@@ -67,7 +67,7 @@ class FallbackStorage(Storage):
                     mime_type = 'application/octet-stream'
                 
                 filename = os.path.basename(name)
-                media = MediaIoBaseUpload(content.file, mimeType=mime_type, resumable=True)
+                media = MediaIoBaseUpload(content.file, mimetype=mime_type, resumable=True)
                 meta = {
                     'name': filename,
                     'parents': [self.folder_id]
