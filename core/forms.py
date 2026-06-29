@@ -71,19 +71,24 @@ class MeetingForm(forms.ModelForm):
             if self.meeting_type == 'BOS':
                 dept = getattr(self.user, 'hod_of', None)
                 if dept:
-                    base_qs = dept.members.all()
+                    members_qs = dept.members.all()
+                    dean = getattr(dept.faculty, 'dean', None)
+                    if dean:
+                        base_qs = User.objects.filter(Q(id__in=members_qs) | Q(id=dean.id))
+                    else:
+                        base_qs = members_qs
                 else:
                     base_qs = User.objects.none()
             elif self.meeting_type == 'BOF':
                 faculty = getattr(self.user, 'dean_of', None)
                 if faculty:
                     base_qs = User.objects.filter(
-                        Q(primary_department__faculty=faculty) | Q(role='HOD')
-                    ).distinct()
+                        Q(faculty=faculty) | Q(primary_department__faculty=faculty) | Q(departments__faculty=faculty)
+                    ).filter(role__in=['HOD', 'TEACHER']).distinct()
                 else:
                     base_qs = User.objects.none()
             else: # DCM
-                base_qs = User.objects.filter(role='DEAN')
+                base_qs = User.objects.exclude(id=self.user.id)
 
             if self.instance.pk:
                 self.fields['attendees'].queryset = (base_qs | self.instance.attendees.all()).distinct().order_by('first_name', 'username')
