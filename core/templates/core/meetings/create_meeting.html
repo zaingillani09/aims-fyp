@@ -95,25 +95,41 @@
             {% if form.location.errors %}<div style="color:#ef4444; font-size:0.8rem; margin-top:5px;">{{ form.location.errors.0 }}</div>{% endif %}
         </div>
         
-        <div class="form-group" style="position: relative;">
-            <label for="attendee-autocomplete-input" style="margin-bottom:8px; display:block;">Invite Attendees</label>
-            
-            <div style="position: relative; margin-bottom: 12px;">
-                <input type="text" id="attendee-autocomplete-input" placeholder="Type name or username to search and invite..." class="form-control" autocomplete="off" style="background:rgba(0,0,0,0.25); padding:10px 14px; font-size:0.9rem; border-color: rgba(255,255,255,0.08); box-sizing: border-box;">
-                <!-- Autocomplete dropdown suggestions -->
-                <div id="autocomplete-suggestions" style="position: absolute; top: 100%; left: 0; right: 0; background: #1e1b4b; border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); z-index: 100; max-height: 200px; overflow-y: auto; display: none;">
-                    <!-- dynamic options -->
+        <div class="form-group">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <label style="margin-bottom:0;">Invite Attendees</label>
+                <div style="font-size:0.85rem;">
+                    <a href="#" id="select-all-attendees" style="color:#60a5fa; text-decoration:none; margin-right:12px; font-weight: 500;">Select All</a>
+                    <a href="#" id="clear-all-attendees" style="color:#f87171; text-decoration:none; font-weight: 500;">Clear All</a>
                 </div>
             </div>
 
-            <!-- Selected Chips list -->
-            <div id="selected-attendees-container" style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px; min-height: 42px; padding: 8px 12px; background: rgba(0, 0, 0, 0.15); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 8px; align-items: center; box-sizing: border-box;">
-                <span class="no-attendees-placeholder" style="color: #64748b; font-size: 0.85rem; font-weight: 300;">No attendees selected yet. Search above to add.</span>
+            <!-- Attendee filters (search and department) -->
+            <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 15px; margin-bottom: 10px;">
+                <input type="text" id="attendee-search" placeholder="Search by name or username..." class="form-control" style="background:rgba(0,0,0,0.25); padding:8px 12px; font-size:0.85rem; border-color: rgba(255,255,255,0.08); box-sizing: border-box;">
+                
+                <select id="attendee-dept-filter" class="form-control" style="background:rgba(0,0,0,0.25); padding:8px 12px; font-size:0.85rem; border-color: rgba(255,255,255,0.08); color: #cbd5e1; cursor: pointer; box-sizing: border-box;">
+                    <option value="">All Departments</option>
+                    {% for dept in departments_list %}
+                        <option value="{{ dept.name }}">{{ dept.name }}</option>
+                    {% endfor %}
+                </select>
             </div>
 
-            <!-- Hidden Django Form Field Checkboxes container -->
-            <div style="display: none;">
-                {{ form.attendees }}
+            <div id="id_attendees">
+                {% for val, name, dept_name in attendees_choices %}
+                    <div class="attendee-item" data-department="{{ dept_name }}">
+                        <label>
+                            <input type="checkbox" name="attendees" value="{{ val }}" {% if val|stringformat:"s" in form.attendees.value or val in form.attendees.value %}checked{% endif %}>
+                            <span>{{ name }}</span>
+                            {% if dept_name %}
+                                <span style="font-size: 0.75rem; color: #818cf8; margin-left: 6px;">({{ dept_name }})</span>
+                            {% endif %}
+                        </label>
+                    </div>
+                {% empty %}
+                    <div style="padding: 20px; text-align: center; color: #64748b; font-size: 0.85rem;">No participants available.</div>
+                {% endfor %}
             </div>
             
             {% if form.attendees.errors %}
@@ -142,10 +158,65 @@
 </div>
 
 <script>
-const meetingType = "{{ form.instance.meeting_type|default:meeting_type }}";
-
 document.addEventListener('DOMContentLoaded', function() {
-    // Helper to filter checkboxes based on search query (for agendas)
+    const attendeeSearch = document.getElementById('attendee-search');
+    const attendeeDeptFilter = document.getElementById('attendee-dept-filter');
+    const attendeeContainer = document.getElementById('id_attendees');
+    const selectAllAttendees = document.getElementById('select-all-attendees');
+    const clearAllAttendees = document.getElementById('clear-all-attendees');
+    
+    function filterAttendees() {
+        const query = attendeeSearch ? attendeeSearch.value.toLowerCase() : '';
+        const dept = attendeeDeptFilter ? attendeeDeptFilter.value.toLowerCase() : '';
+        
+        const items = attendeeContainer.querySelectorAll('.attendee-item');
+        items.forEach(item => {
+            const label = item.querySelector('label');
+            const text = label ? label.textContent.toLowerCase() : '';
+            const itemDept = (item.getAttribute('data-department') || '').toLowerCase();
+            
+            const matchesQuery = text.includes(query);
+            const matchesDept = !dept || itemDept === dept;
+            
+            if (matchesQuery && matchesDept) {
+                item.style.display = '';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    }
+    
+    if (attendeeSearch) attendeeSearch.addEventListener('input', filterAttendees);
+    if (attendeeDeptFilter) attendeeDeptFilter.addEventListener('change', filterAttendees);
+    
+    // Bulk Actions for Attendees
+    if (selectAllAttendees && attendeeContainer) {
+        selectAllAttendees.addEventListener('click', function(e) {
+            e.preventDefault();
+            const visibleItems = attendeeContainer.querySelectorAll('.attendee-item');
+            visibleItems.forEach(item => {
+                if (item.style.display !== 'none') {
+                    const cb = item.querySelector('input[type="checkbox"]');
+                    if (cb) cb.checked = true;
+                }
+            });
+        });
+    }
+    
+    if (clearAllAttendees && attendeeContainer) {
+        clearAllAttendees.addEventListener('click', function(e) {
+            e.preventDefault();
+            const visibleItems = attendeeContainer.querySelectorAll('.attendee-item');
+            visibleItems.forEach(item => {
+                if (item.style.display !== 'none') {
+                    const cb = item.querySelector('input[type="checkbox"]');
+                    if (cb) cb.checked = false;
+                }
+            });
+        });
+    }
+    
+    // Agenda filters setup
     function setupFilter(searchId, containerId) {
         const searchInput = document.getElementById(searchId);
         const container = document.getElementById(containerId);
@@ -163,7 +234,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Helper to select/clear visible checkboxes
     function setupBulkActions(selectAllId, clearAllId, containerId) {
         const selectAll = document.getElementById(selectAllId);
         const clearAll = document.getElementById(clearAllId);
@@ -193,125 +263,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
     }
-
-    // Setup autocomplete selection chips logic
-    const selectedContainer = document.getElementById('selected-attendees-container');
     
-    function addSelectedAttendeeChip(userId, userName) {
-        const placeholder = selectedContainer.querySelector('.no-attendees-placeholder');
-        if (placeholder) {
-            placeholder.style.display = 'none';
-        }
-        
-        // Prevent duplicate add
-        if (selectedContainer.querySelector(`[data-user-id="${userId}"]`)) {
-            return;
-        }
-        
-        // Find or build checkbox representation inside hidden wrapper
-        let cb = document.querySelector(`#id_attendees input[value="${userId}"]`);
-        if (!cb) {
-            const wrapper = document.getElementById('id_attendees');
-            const newLabel = document.createElement('label');
-            newLabel.style.display = 'block';
-            newLabel.innerHTML = `<input type="checkbox" name="attendees" value="${userId}" checked="checked"> ${userName}`;
-            wrapper.appendChild(newLabel);
-            cb = newLabel.querySelector('input');
-        } else {
-            cb.checked = true;
-        }
-        
-        // Render visible chip badge tag
-        const chip = document.createElement('div');
-        chip.className = 'attendee-chip';
-        chip.setAttribute('data-user-id', userId);
-        chip.style.cssText = "display: inline-flex; align-items: center; gap: 8px; background: rgba(139, 92, 246, 0.15); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 20px; padding: 4px 12px; font-size: 0.85rem; color: #ddd6fe; transition: all 0.2s;";
-        chip.innerHTML = `
-            <span>${userName}</span>
-            <span class="remove-btn" style="cursor: pointer; color: #fca5a5; font-weight: bold; font-size: 1rem; line-height: 1;">&times;</span>
-        `;
-        
-        chip.querySelector('.remove-btn').addEventListener('click', function() {
-            if (cb) {
-                cb.checked = false;
-                cb.closest('label').remove();
-            }
-            chip.remove();
-            
-            if (selectedContainer.querySelectorAll('.attendee-chip').length === 0) {
-                if (placeholder) {
-                    placeholder.style.display = 'block';
-                }
-            }
-        });
-        
-        selectedContainer.appendChild(chip);
-    }
-
-    // Auto-populate chips on initial page load (if POST has invalid inputs and page reloads)
-    const hiddenCheckboxes = document.querySelectorAll('#id_attendees input[type="checkbox"]');
-    hiddenCheckboxes.forEach(cb => {
-        if (cb.checked) {
-            const label = cb.closest('label');
-            const name = label ? label.textContent.trim() : cb.value;
-            addSelectedAttendeeChip(cb.value, name);
-        }
-    });
-
-    // Wire-up autocomplete fetch events
-    const autocompleteInput = document.getElementById('attendee-autocomplete-input');
-    const suggestionsDropdown = document.getElementById('autocomplete-suggestions');
-    let debounceTimer = null;
-    
-    autocompleteInput.addEventListener('input', function(e) {
-        clearTimeout(debounceTimer);
-        const query = e.target.value.trim();
-        
-        if (query.length < 2) {
-            suggestionsDropdown.style.display = 'none';
-            return;
-        }
-        
-        debounceTimer = setTimeout(() => {
-            fetch(`/portal/meetings/search-attendees/?q=${encodeURIComponent(query)}&meeting_type=${meetingType}`)
-                .then(res => res.json())
-                .then(data => {
-                    suggestionsDropdown.innerHTML = '';
-                    if (data.results && data.results.length > 0) {
-                        data.results.forEach(user => {
-                            const opt = document.createElement('div');
-                            opt.style.cssText = "padding: 10px 14px; color: #cbd5e1; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05); transition: background 0.2s;";
-                            opt.innerHTML = `
-                                <div style="font-weight: 500; color: white;">${user.name} <span style="font-weight:300; font-size:0.75rem; color:#94a3b8;">(@${user.username})</span></div>
-                                <div style="font-size: 0.75rem; color: #a5b4fc; margin-top: 2px;">${user.role} ${user.department ? '• ' + user.department : ''}</div>
-                            `;
-                            opt.onmouseover = function() { opt.style.background = "rgba(255,255,255,0.06)"; };
-                            opt.onmouseout = function() { opt.style.background = "none"; };
-                            
-                            opt.addEventListener('click', function() {
-                                addSelectedAttendeeChip(user.id, user.name);
-                                autocompleteInput.value = '';
-                                suggestionsDropdown.style.display = 'none';
-                            });
-                            suggestionsDropdown.appendChild(opt);
-                        });
-                        suggestionsDropdown.style.display = 'block';
-                    } else {
-                        suggestionsDropdown.innerHTML = '<div style="padding: 12px; color: #64748b; font-size: 0.85rem; text-align: center;">No matches found.</div>';
-                        suggestionsDropdown.style.display = 'block';
-                    }
-                })
-                .catch(err => console.error("Autocomplete search failed:", err));
-        }, 250);
-    });
-    
-    document.addEventListener('click', function(e) {
-        if (!autocompleteInput.contains(e.target) && !suggestionsDropdown.contains(e.target)) {
-            suggestionsDropdown.style.display = 'none';
-        }
-    });
-
-    // Initialize search and actions for agendas
     setupFilter('agenda-search', 'id_agenda_issues');
     setupBulkActions('select-all-agendas', 'clear-all-agendas', 'id_agenda_issues');
 });

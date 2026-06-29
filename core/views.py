@@ -287,7 +287,28 @@ def meeting_create(request):
     else:
         form = MeetingForm(user=request.user, meeting_type=meeting_type)
 
-    return render(request, 'core/meetings/create_meeting.html', {'form': form, 'meeting_type': meeting_type})
+    # Build choices dynamically
+    attendees_qs = form.fields['attendees'].queryset
+    attendees_choices = []
+    for u in attendees_qs:
+        dept_name = u.primary_department.name if u.primary_department else ""
+        display_name = u.get_full_name() or u.username
+        attendees_choices.append((u.id, f"{display_name} (@{u.username})", dept_name))
+        
+    from core.models import Department
+    if role == 'RECTOR':
+        departments_list = Department.objects.all().order_by('name')
+    elif role == 'DEAN' and getattr(request.user, 'dean_of', None):
+        departments_list = Department.objects.filter(faculty=request.user.dean_of).order_by('name')
+    else:
+        departments_list = []
+
+    return render(request, 'core/meetings/create_meeting.html', {
+        'form': form, 
+        'meeting_type': meeting_type,
+        'attendees_choices': attendees_choices,
+        'departments_list': departments_list
+    })
 
 @login_required
 def teacher_issue_detail(request, pk):

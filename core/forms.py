@@ -66,20 +66,29 @@ class MeetingForm(forms.ModelForm):
             self.instance.organizer = self.user
             self.instance.meeting_type = self.meeting_type
             
-            # Dynamically filter attendees query set based on state to prevent heavy GET load
-            if self.is_bound:
-                if hasattr(self.data, 'getlist'):
-                    selected_ids = self.data.getlist('attendees')
+            # Filter attendees dynamically by meeting type
+            from django.db.models import Q
+            if self.meeting_type == 'BOS':
+                dept = getattr(self.user, 'hod_of', None)
+                if dept:
+                    base_qs = dept.members.all()
                 else:
-                    selected_ids = self.data.get('attendees', [])
-                    if not isinstance(selected_ids, list):
-                        selected_ids = [selected_ids]
-                self.fields['attendees'].queryset = User.objects.filter(id__in=selected_ids)
+                    base_qs = User.objects.none()
+            elif self.meeting_type == 'BOF':
+                faculty = getattr(self.user, 'dean_of', None)
+                if faculty:
+                    base_qs = User.objects.filter(
+                        Q(primary_department__faculty=faculty) | Q(role='HOD')
+                    ).distinct()
+                else:
+                    base_qs = User.objects.none()
+            else: # DCM
+                base_qs = User.objects.filter(role='DEAN')
+
+            if self.instance.pk:
+                self.fields['attendees'].queryset = (base_qs | self.instance.attendees.all()).distinct().order_by('first_name', 'username')
             else:
-                if self.instance.pk:
-                    self.fields['attendees'].queryset = self.instance.attendees.all()
-                else:
-                    self.fields['attendees'].queryset = User.objects.none()
+                self.fields['attendees'].queryset = base_qs.order_by('first_name', 'username')
 
             # Filter agenda issues
             if self.meeting_type == 'BOS':

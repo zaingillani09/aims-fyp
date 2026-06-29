@@ -24,3 +24,6 @@ backup.json
 # Static and media
 /media/
 /static_root/
+
+# Cloud Storage Credentials
+google_drive_credentials.json
