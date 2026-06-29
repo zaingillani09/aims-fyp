@@ -21,15 +21,32 @@ class FallbackStorage(Storage):
         self.folder_id = None
         
         token_path = os.path.join(settings.BASE_DIR, 'token.json')
+        token_info = None
+        import json
+        
         if os.path.exists(token_path):
+            try:
+                with open(token_path, 'r') as f:
+                    token_info = json.load(f)
+            except Exception:
+                pass
+        elif os.getenv('GOOGLE_DRIVE_TOKEN_JSON'):
+            try:
+                token_info = json.loads(os.getenv('GOOGLE_DRIVE_TOKEN_JSON'))
+            except Exception:
+                pass
+
+        if token_info:
             orig_timeout = socket.getdefaulttimeout()
             try:
                 socket.setdefaulttimeout(3.0)
-                creds = Credentials.from_authorized_user_file(token_path, SCOPES)
+                creds = Credentials.from_authorized_user_info(token_info, SCOPES)
                 if creds and creds.expired and creds.refresh_token:
                     creds.refresh(Request())
-                    with open(token_path, 'w') as f:
-                        f.write(creds.to_json())
+                    # Update local token.json if we are running locally
+                    if os.path.exists(token_path):
+                        with open(token_path, 'w') as f:
+                            f.write(creds.to_json())
                         
                 self.service = build('drive', 'v3', credentials=creds)
                 self.has_gdrive = True
