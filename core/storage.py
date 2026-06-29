@@ -1,48 +1,113 @@
+import os
 import logging
+import mimetypes
 import socket
+from io import BytesIO
 from django.core.files.storage import Storage, FileSystemStorage
-from gdstorage.storage import GoogleDriveStorage
+from django.conf import settings
+from google.oauth2.credentials import Credentials
+from google.auth.transport.requests import Request
+from googleapiclient.discovery import build
+from googleapiclient.http import MediaIoBaseUpload, MediaIoBaseDownload
 
 logger = logging.getLogger(__name__)
+
+SCOPES = ['https://www.googleapis.com/auth/drive']
 
 class FallbackStorage(Storage):
     def __init__(self, *args, **kwargs):
         self.local = FileSystemStorage()
+        self.has_gdrive = False
+        self.folder_id = None
         
-        # Set a short timeout when building the service client
-        orig_timeout = socket.getdefaulttimeout()
-        try:
-            socket.setdefaulttimeout(3.0)
-            self.gdrive = GoogleDriveStorage()
-            self.has_gdrive = True
-        except Exception as e:
-            logger.warning(f"Failed to initialize GoogleDriveStorage: {e}")
-            self.has_gdrive = False
-        finally:
-            socket.setdefaulttimeout(orig_timeout)
-
-    def _save(self, name, content):
-        if self.has_gdrive:
+        token_path = os.path.join(settings.BASE_DIR, 'token.json')
+        if os.path.exists(token_path):
             orig_timeout = socket.getdefaulttimeout()
             try:
-                socket.setdefaulttimeout(3.0)  # 3 seconds max timeout for upload
-                # Try saving to Google Drive
-                return self.gdrive._save(name, content)
+                socket.setdefaulttimeout(3.0)
+                creds = Credentials.from_authorized_user_file(token_path, SCOPES)
+                if creds and creds.expired and creds.refresh_token:
+                    creds.refresh(Request())
+                    with open(token_path, 'w') as f:
+                        f.write(creds.to_json())
+                        
+                self.service = build('drive', 'v3', credentials=creds)
+                self.has_gdrive = True
+                self.folder_id = self._get_folder_id('MEETING MINUTES')
             except Exception as e:
-                logger.error(f"Google Drive upload failed or timed out: {e}. Falling back to local storage.")
+                logger.warning(f"Failed to initialize user Google Drive credentials: {e}")
+                self.has_gdrive = False
             finally:
                 socket.setdefaulttimeout(orig_timeout)
-        # Fallback to local storage
+
+    def _get_folder_id(self, folder_name):
+        try:
+            q = f"mimeType = 'application/vnd.google-apps.folder' and name = '{folder_name}' and trashed = false"
+            results = self.service.files().list(q=q, fields="files(id)").execute()
+            files = results.get('files', [])
+            if files:
+                return files[0]['id']
+            meta = {
+                'name': folder_name,
+                'mimeType': 'application/vnd.google-apps.folder'
+            }
+            folder = self.service.files().create(body=meta, fields='id').execute()
+            return folder.get('id')
+        except Exception as e:
+            logger.error(f"Failed to get/create Google Drive folder ID: {e}")
+            return None
+
+    def _save(self, name, content):
+        if self.has_gdrive and self.folder_id:
+            orig_timeout = socket.getdefaulttimeout()
+            try:
+                socket.setdefaulttimeout(4.0)
+                mime_type, _ = mimetypes.guess_type(name)
+                if not mime_type:
+                    mime_type = 'application/octet-stream'
+                
+                filename = os.path.basename(name)
+                media = MediaIoBaseUpload(content.file, mimeType=mime_type, resumable=True)
+                meta = {
+                    'name': filename,
+                    'parents': [self.folder_id]
+                }
+                
+                self.service.files().create(
+                    body=meta,
+                    media_body=media,
+                    fields='id'
+                ).execute()
+                return filename
+            except Exception as e:
+                logger.error(f"Google Drive upload failed: {e}. Falling back to local storage.")
+            finally:
+                socket.setdefaulttimeout(orig_timeout)
+        
         return self.local._save(name, content)
 
     def _open(self, name, mode='rb'):
         if self.local.exists(name):
             return self.local._open(name, mode)
-        if self.has_gdrive:
+        if self.has_gdrive and self.folder_id:
             orig_timeout = socket.getdefaulttimeout()
             try:
-                socket.setdefaulttimeout(2.0)
-                return self.gdrive._open(name, mode)
+                socket.setdefaulttimeout(3.0)
+                filename = os.path.basename(name)
+                q = f"name = '{filename}' and '{self.folder_id}' in parents and trashed = false"
+                results = self.service.files().list(q=q, fields="files(id)").execute()
+                files = results.get('files', [])
+                if files:
+                    file_id = files[0]['id']
+                    request = self.service.files().get_media(fileId=file_id)
+                    fh = BytesIO()
+                    downloader = MediaIoBaseDownload(fh, request)
+                    done = False
+                    while done is False:
+                        _, done = downloader.next_chunk()
+                    fh.seek(0)
+                    from django.core.files import File
+                    return File(fh, name)
             except Exception:
                 pass
             finally:
@@ -52,11 +117,15 @@ class FallbackStorage(Storage):
     def exists(self, name):
         if self.local.exists(name):
             return True
-        if self.has_gdrive:
+        if self.has_gdrive and self.folder_id:
             orig_timeout = socket.getdefaulttimeout()
             try:
                 socket.setdefaulttimeout(2.0)
-                return self.gdrive.exists(name)
+                filename = os.path.basename(name)
+                q = f"name = '{filename}' and '{self.folder_id}' in parents and trashed = false"
+                results = self.service.files().list(q=q, fields="files(id)").execute()
+                files = results.get('files', [])
+                return len(files) > 0
             except Exception:
                 pass
             finally:
@@ -66,13 +135,16 @@ class FallbackStorage(Storage):
     def url(self, name):
         if self.local.exists(name):
             return self.local.url(name)
-        if self.has_gdrive:
+        if self.has_gdrive and self.folder_id:
             orig_timeout = socket.getdefaulttimeout()
             try:
                 socket.setdefaulttimeout(2.0)
-                url_val = self.gdrive.url(name)
-                if url_val:
-                    return url_val
+                filename = os.path.basename(name)
+                q = f"name = '{filename}' and '{self.folder_id}' in parents and trashed = false"
+                results = self.service.files().list(q=q, fields="files(id, webContentLink)").execute()
+                files = results.get('files', [])
+                if files and files[0].get('webContentLink'):
+                    return files[0]['webContentLink']
             except Exception:
                 pass
             finally:
@@ -82,11 +154,17 @@ class FallbackStorage(Storage):
     def delete(self, name):
         if self.local.exists(name):
             self.local.delete(name)
-        if self.has_gdrive:
+        if self.has_gdrive and self.folder_id:
             orig_timeout = socket.getdefaulttimeout()
             try:
                 socket.setdefaulttimeout(3.0)
-                self.gdrive.delete(name)
+                filename = os.path.basename(name)
+                q = f"name = '{filename}' and '{self.folder_id}' in parents and trashed = false"
+                results = self.service.files().list(q=q, fields="files(id)").execute()
+                files = results.get('files', [])
+                if files:
+                    file_id = files[0]['id']
+                    self.service.files().delete(fileId=file_id).execute()
             except Exception:
                 pass
             finally:
@@ -95,11 +173,16 @@ class FallbackStorage(Storage):
     def size(self, name):
         if self.local.exists(name):
             return self.local.size(name)
-        if self.has_gdrive:
+        if self.has_gdrive and self.folder_id:
             orig_timeout = socket.getdefaulttimeout()
             try:
                 socket.setdefaulttimeout(2.0)
-                return self.gdrive.size(name)
+                filename = os.path.basename(name)
+                q = f"name = '{filename}' and '{self.folder_id}' in parents and trashed = false"
+                results = self.service.files().list(q=q, fields="files(size)").execute()
+                files = results.get('files', [])
+                if files and files[0].get('size'):
+                    return int(files[0]['size'])
             except Exception:
                 pass
             finally:
